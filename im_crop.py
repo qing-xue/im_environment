@@ -47,21 +47,21 @@ def im_crop(im, box_w=256, box_h=256, stride_w=256, stride_h=256, epsilon=10):
 
 #=================== Tests ===================#
 def test_im_crop():
-    im = Image.open('F:/workplace/public_dataset/Heshan_imgset/morning/1/20190927上午1.jpg')
+    im = Image.open('20190927am1.jpg')
     patches, boxes = im_crop(im, box_w=512, box_h=512, stride_w=512, stride_h=512)
     draw = ImageDraw.Draw(im)
     for box in boxes:
         color = (random.randint(64,255), random.randint(64,255), random.randint(64,255))
-        draw.rectangle(box, outline=color, width=3)
+        draw.rectangle(box, outline=color, width=5)
         # im.show()
     im.show()
 
-if __name__ == '__main__':
-    # test_im_crop()
+#=================== Process ===================#
+def process_crop():
     Heshan_imgset = 'F:/workplace/public_dataset/Heshan_imgset'
     paths_mask = Heshan_imgset + '/*/*/*[jpg, png, jpeg]'
     img_paths = glob.glob(paths_mask)
-    random.shuffle(img_paths)
+    random.shuffle(img_paths)    # 自定义是否需要打乱
     
     # Results
     result_folder = Heshan_imgset + '/Results'
@@ -93,3 +93,7 @@ if __name__ == '__main__':
             im_patch = np.array(im_patch, dtype='uint8')
             im_patch = Image.fromarray(im_patch)
             im_patch.save(os.path.join(result_folder, patch_name), 'bmp')
+
+if __name__ == '__main__':
+    test_im_crop()    # 查看图片切块效果
+    # process_crop()
