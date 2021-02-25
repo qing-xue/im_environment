@@ -61,7 +61,6 @@ def process_crop():
     Heshan_imgset = 'F:/workplace/public_dataset/Heshan_imgset'
     paths_mask = Heshan_imgset + '/*/*/*[jpg, png, jpeg]'
     img_paths = glob.glob(paths_mask)
-    random.shuffle(img_paths)    # 自定义是否需要打乱
     
     # Results
     result_folder = Heshan_imgset + '/Results'
@@ -75,8 +74,8 @@ def process_crop():
 
         # 拍摄时间--PM2.5值
         ch2En = str.maketrans("'上午''下午'", "'AM''PM'")
-        filename = filename.translate(ch2En)
         shot_time = re.split('[/\\\\.]', filename)[-2]
+        shot_time = shot_time.translate(ch2En)
         shot_time = shot_time[4:]
         PM_25 = '35'        # bug...
 
@@ -95,5 +94,5 @@ def process_crop():
             im_patch.save(os.path.join(result_folder, patch_name), 'bmp')
 
 if __name__ == '__main__':
-    test_im_crop()    # 查看图片切块效果
-    # process_crop()
+    # test_im_crop()    # 查看图片切块效果
+    process_crop()
