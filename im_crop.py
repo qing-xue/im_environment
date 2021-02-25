@@ -4,6 +4,9 @@ import os
 import numpy as np
 import re
 from PIL import Image, ImageDraw
+from utils import ExcelMapper
+
+excelMapper = ExcelMapper(r'..\客观图像质量指标测定-李展20210218.xlsx')
 
 #=================== Utils ===================#
 def im_crop(im, box_w=256, box_h=256, stride_w=256, stride_h=256, epsilon=10):
@@ -74,10 +77,9 @@ def process_crop():
 
         # 拍摄时间--PM2.5值
         ch2En = str.maketrans("'上午''下午'", "'AM''PM'")
-        shot_time = re.split('[/\\\\.]', filename)[-2]
-        shot_time = shot_time.translate(ch2En)
-        shot_time = shot_time[4:]
-        PM_25 = '35'        # bug...
+        img_id = re.split('[/\\\\.]', filename)[-2]
+        shot_time = img_id.translate(ch2En)[4:]
+        PM_25 = str(excelMapper.get_PM2_5(img_id))
 
         # 图块位置--天空/非天空
         for i in range(len(patches)):

@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def read_objective_data(ob_data_path=r'..\客观图像质量指标测定-李展20210218.xlsx'):
     """读取客观图像质量指标测定
 
@@ -27,11 +28,30 @@ def read_objective_data(ob_data_path=r'..\客观图像质量指标测定-李展2
     # add columns indexs  
     column_keys[0] = "IMG_ID"
     pd_ob_data.columns = column_keys 
-    pd_ob_data.index = pd_ob_data['IMG_ID'].values
-    pd_ob_data = pd_ob_data.drop(['IMG_ID'], axis=1)
 
+    print(ob_data_path)
     print(pd_ob_data)
     return pd_ob_data
+
+
+class ExcelMapper:
+
+    def __init__(self, filename):
+        self.f = filename
+        self.data = read_objective_data(filename)
+    
+    def get_data(self):
+        return self.data
+
+    def get_PM2_5(self, img_id):
+        pd_ob_data = self.data
+        loc = pd_ob_data['IMG_ID'].str.contains(img_id)
+        if loc.any():
+            row_data = pd_ob_data[loc]['PM2.5']
+            return row_data.values[0]
+        else:
+            return -1
+
 
 if __name__ == '__main__':
     read_objective_data()
