@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import re
 
 # ExcelWriter
-def pd_to_exel( data_df, name = 'env_data.xlsx' ):
+def pd_to_exel(data_df, name = 'env_data.xlsx' ):
     cols = list(data_df)
     cols.insert(0, cols.pop(cols.index('IMG_ID')))
     data_df = data_df.loc[:, cols]

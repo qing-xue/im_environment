@@ -1,19 +1,19 @@
 import pandas as pd
 
 
-def read_objective_data(ob_data_path=r'..\客观图像质量指标测定-李展20210218.xlsx'):
+def read_objective_data(obj_data_path=r'..\客观图像质量指标测定-李展20210218.xlsx'):
     """读取客观图像质量指标测定
 
     受限于原 Excel 文件的存储排列方式，有些地方不便于扩展
     """
-    ob_data = pd.read_excel(ob_data_path, sheet_name=None, header=None)  
+    obj_data = pd.read_excel(obj_data_path, sheet_name=None, header=None)  
 
     # 合并多个 Sheet
-    sheet_keys = list(ob_data.keys())
-    pd_ob_data = pd.DataFrame()
+    sheet_keys = list(obj_data.keys())
+    pd_obj_data = pd.DataFrame()
     column_keys = []
     for i in sheet_keys:
-        sheet1 = ob_data[i]
+        sheet1 = obj_data[i]
         sheet1 = sheet1.drop([6], axis=1)      # magic number
         if "morning1" == i:
             sheet1 = sheet1.drop([0], axis=0)  # remove the comments 
@@ -23,16 +23,36 @@ def read_objective_data(ob_data_path=r'..\客观图像质量指标测定-李展2
         if "morning2" == i:
             column_keys = sheet1.values[0]     # magic number
         sheet1 = sheet1.drop([0], axis=0)   
-        pd_ob_data = pd_ob_data.append(sheet1, ignore_index=True)
+        pd_obj_data = pd_obj_data.append(sheet1, ignore_index=True)
 
     # add columns indexs  
     column_keys[0] = "IMG_ID"
-    pd_ob_data.columns = column_keys 
+    pd_obj_data.columns = column_keys 
 
-    print(ob_data_path)
-    print(pd_ob_data)
-    return pd_ob_data
+    print(obj_data_path)
+    print(pd_obj_data)
+    return pd_obj_data
 
+
+def read_sbjective_data(sbj_data_path=r'..\志清雪清主观数据标定及加和分析20210218.xlsx'):
+    """读取主观图像质量指标测定
+
+    受限于原 Excel 文件的存储排列方式，有些地方不便于扩展
+    """
+    origin_envir_data = pd.read_excel(sbj_data_path, sheet_name=0, skiprows=[0], usecols="B,W,X")  
+    sbj_sum_data = pd.read_excel(sbj_data_path, sheet_name=1, skiprows=[0], usecols="A:O")
+
+    # 缺失值处理，'同时刻三张图片（1、2、3）的L列求和'...
+    fill_columns = [-3, -2, -1]
+    for i in fill_columns:  # 多列切片会使 inplace 失效
+        sbj_sum_data.iloc[:, i].fillna(method='backfill', inplace=True)
+
+    pd_sbj_data = pd.merge(origin_envir_data, sbj_sum_data, on='IMG_ID',  how='outer', suffixes=['_L', '_R'])
+    
+    print(sbj_data_path)
+    print(pd_sbj_data)
+    return pd_sbj_data
+ 
 
 class ExcelMapper:
 
@@ -54,4 +74,12 @@ class ExcelMapper:
 
 
 if __name__ == '__main__':
-    read_objective_data()
+    data_obj = read_objective_data()
+    writer1 = pd.ExcelWriter('temp_obj.xlsx')
+    data_obj.to_excel(writer1, float_format='%.5f')
+    writer1.save()
+
+    data_sbj = read_sbjective_data()
+    writer2 = pd.ExcelWriter('temp_sbj.xlsx')
+    data_sbj.to_excel(writer2, float_format='%.5f')
+    writer2.save()
