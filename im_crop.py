@@ -61,7 +61,7 @@ def test_im_crop():
 
 #=================== Process ===================#
 def process_crop():
-    Heshan_imgset = 'F:/workplace/public_dataset/Heshan_imgset'
+    Heshan_imgset = 'F:\PG\envPro\Heshan_imgset'
     paths_mask = Heshan_imgset + '/*/*/*[jpg, png, jpeg]'
     img_paths = glob.glob(paths_mask)
     
@@ -69,7 +69,6 @@ def process_crop():
     result_folder = Heshan_imgset + '/Results'
     if not os.path.exists(result_folder):
         os.makedirs(result_folder)
-
     # Process
     for i, filename in enumerate(img_paths):
         im = Image.open(filename)
@@ -86,15 +85,76 @@ def process_crop():
             im_patch = patches[i]
             box = boxes[i]
             ref_origin = str(box[0]) + '_' + str(box[1])
-            is_sky = '1'    # bug...
-
+            if(judge_is_sky(im_patch,threshold)):
+                is_sky = '0'
+            else:
+                is_sky = '1'
             # save
             patch_name = shot_time + '-' + ref_origin + '-' + is_sky + '-' + PM_25 + '.bmp'  # ugly
-            print(patch_name)
+            # print(os.path.join(result_folder, patch_name))
             im_patch = np.array(im_patch, dtype='uint8')
             im_patch = Image.fromarray(im_patch)
             im_patch.save(os.path.join(result_folder, patch_name), 'bmp')
 
+
+def k_test():
+    Heshan_imgset = 'F:\PG\envPro\ImagePreProcess\im_environment\Results'
+    paths_mask = Heshan_imgset + '/*/*/*[jpg, png, jpeg]'
+    img_paths = glob.glob("F:\PG\envPro\ImagePreProcess\im_environment\*.jpg")
+    # random.shuffle(img_paths)    # 自定义是否需要打乱
+    print(img_paths)
+    # Results
+    result_folder = Heshan_imgset + '/Results'
+    if not os.path.exists(result_folder):
+        os.makedirs(result_folder)
+
+    # Process
+    for i, filename in enumerate(img_paths):
+        im = Image.open(filename)
+        print(i,filename)
+        patches, boxes = im_crop(im, box_w=512, box_h=512, stride_w=512, stride_h=512)
+        print(judge_is_sky(im,threshold))
+        # 拍摄时间--PM2.5值
+        ch2En = str.maketrans("'上午''下午'", "'AM''PM'")
+        filename = filename.translate(ch2En)
+        shot_time = re.split('[/\\\\.]', filename)[-2]
+        shot_time = shot_time[4:]
+        PM_25 = '35'        # bug...
+        # 图块位置--天空/非天空
+        for i in range(len(patches)):
+            im_patch = patches[i]
+            box = boxes[i]
+            ref_origin = str(box[0]) + '_' + str(box[1])
+            is_sky = '1'
+            patch_name = shot_time + '-' + ref_origin + '-' + is_sky + '-' + PM_25 + '.bmp'  # ugly
+
+            print(os.path.join(result_folder, patch_name),judge_is_sky(im_patch,100))
+        #     print(im_patch)
+        #     
+        #     ref_origin = str(box[0]) + '_' + str(box[1])
+        #     is_sky = '1'    # bug...
+
+        #     # save
+        #     print(patch_name)
+        #     im_patch = np.array(im_patch, dtype='uint8')
+        #     im_patch = Image.fromarray(im_patch)
+        #     im_patch.save(os.path.join(result_folder, patch_name), 'bmp')
+
+def judge_is_sky(img,threshold):
+    # img.show()
+    grey_img = img.convert('L')
+    grey_img_array = np.array(grey_img)
+    shape = grey_img_array.shape
+    mean = np.mean(grey_img_array)
+    var = np.var(grey_img_array)
+    # print(var)
+    if(var<threshold):
+        return True
+    else:
+        return False
+
+
 if __name__ == '__main__':
     # test_im_crop()    # 查看图片切块效果
     process_crop()
+    # k_test()
