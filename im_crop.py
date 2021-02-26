@@ -77,7 +77,7 @@ def process_crop():
     img_paths = glob.glob(paths_mask)
     
     # Results
-    result_folder = Heshan_imgset + '/Results'
+    result_folder = os.path.join(Heshan_imgset, 'Results') 
     if not os.path.exists(result_folder):
         os.makedirs(result_folder)
 
