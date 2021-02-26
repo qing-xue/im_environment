@@ -52,13 +52,36 @@ def read_sbjective_data(sbj_data_path=r'..\志清雪清主观数据标定及加�
     print(sbj_data_path)
     print(pd_sbj_data)
     return pd_sbj_data
- 
 
-class ExcelMapper:
 
-    def __init__(self, filename):
-        self.f = filename
-        self.data = read_objective_data(filename)
+def get_excel_data(obj_data_path, sbj_data_path):
+    data_obj = read_objective_data(obj_data_path)
+    data_sbj = read_sbjective_data(sbj_data_path)
+
+    # regularize names '\20190926下午\1.jpg'...
+    data_obj['IMG_ID'] = data_obj['IMG_ID'].str.replace("'", '', regex=True)
+    data_sbj['IMG_ID'] = data_sbj['IMG_ID'].str.replace('\\', '', regex=True)
+    df_data = pd.merge(data_obj, data_sbj, on='IMG_ID',  how='outer', suffixes=['_L', '_R'])
+    
+    # tmperoally save
+    writer = pd.ExcelWriter('temp_obj.xlsx')
+    data_obj.to_excel(writer, float_format='%.5f')
+    writer.save()
+    writer = pd.ExcelWriter('temp_sbj.xlsx')
+    data_sbj.to_excel(writer, float_format='%.5f')
+    writer.save()
+    writer = pd.ExcelWriter('temp_all.xlsx')
+    df_data.to_excel(writer, float_format='%.5f')
+    writer.save()
+
+    print(df_data)
+    return df_data
+
+
+class ImageMapper:
+
+    def __init__(self, df_data):
+        self.data = df_data
     
     def get_data(self):
         return self.data
@@ -69,17 +92,19 @@ class ExcelMapper:
         if loc.any():
             row_data = pd_ob_data[loc]['PM2.5']
             return row_data.values[0]
-        else:
-            return -1
+        return -1
+
+    def get_row(self, img_id):
+        pd_ob_data = self.data
+        loc = pd_ob_data['IMG_ID'].str.contains(img_id)
+        if loc.any():
+            row_data = pd_ob_data[loc]
+            row_data = row_data.reset_index(drop=True)
+            return row_data
 
 
 if __name__ == '__main__':
-    data_obj = read_objective_data()
-    writer1 = pd.ExcelWriter('temp_obj.xlsx')
-    data_obj.to_excel(writer1, float_format='%.5f')
-    writer1.save()
-
-    data_sbj = read_sbjective_data()
-    writer2 = pd.ExcelWriter('temp_sbj.xlsx')
-    data_sbj.to_excel(writer2, float_format='%.5f')
-    writer2.save()
+    obj_data_path = r'..\客观图像质量指标测定-李展20210218.xlsx'
+    sbj_data_path = r'..\志清雪清主观数据标定及加和分析20210218.xlsx'
+    df_data = get_excel_data(obj_data_path, sbj_data_path)
+    
