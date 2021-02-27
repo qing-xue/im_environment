@@ -178,7 +178,7 @@ def judge_is_sky(img,threshold):
 
 
 if __name__ == '__main__':
-    # test_im_crop()    # 查看图片切块效果
+    test_im_crop()    # 查看图片切块效果
     # k_test()
 
     obj_data_path = r'..\客观图像质量指标测定-李展20210218.xlsx'
