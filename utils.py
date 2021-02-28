@@ -29,8 +29,6 @@ def read_objective_data(obj_data_path=r'..\客观图像质量指标测定-李展
     column_keys[0] = "IMG_ID"
     pd_obj_data.columns = column_keys 
 
-    print(obj_data_path)
-    print(pd_obj_data)
     return pd_obj_data
 
 
@@ -49,8 +47,6 @@ def read_sbjective_data(sbj_data_path=r'..\志清雪清主观数据标定及加�
 
     pd_sbj_data = pd.merge(origin_envir_data, sbj_sum_data, on='IMG_ID',  how='outer', suffixes=['_L', '_R'])
     
-    print(sbj_data_path)
-    print(pd_sbj_data)
     return pd_sbj_data
 
 
@@ -74,7 +70,6 @@ def get_excel_data(obj_data_path, sbj_data_path):
     df_data.to_excel(writer, float_format='%.5f')
     writer.save()
 
-    print(df_data)
     return df_data
 
 
@@ -107,4 +102,3 @@ if __name__ == '__main__':
     obj_data_path = r'..\客观图像质量指标测定-李展20210218.xlsx'
     sbj_data_path = r'..\志清雪清主观数据标定及加和分析20210218.xlsx'
     df_data = get_excel_data(obj_data_path, sbj_data_path)
-    

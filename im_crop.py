@@ -1,10 +1,18 @@
+"""
+==========================
+切分原始图像制作图像块数据集
+==========================
+
+需要在 Results/ 目录下包含所有的原始图像块；从 'crop_labels.xlsx' 中
+切分出单条的标签信息存放至标签文件夹下。
+
+"""
 import glob
-import random
 import os
 import numpy as np
 import re
 import pandas as pd
-from PIL import Image, ImageDraw
+from PIL import Image
 from utils import ImageMapper, get_excel_data
 
 
@@ -57,34 +65,45 @@ class ImageCropper():
         return patches, patches_idx
 
 
-#=================== Tests ===================#
-def test_im_crop():
-    im = Image.open('20190927am1.jpg')
-    imCropper = ImageCropper(im)
-    patches, boxes = imCropper.crop(box_w=512, box_h=512, stride_w=512, stride_h=512)
-    draw = ImageDraw.Draw(im)
-    for box in boxes:
-        color = (random.randint(64,255), random.randint(64,255), random.randint(64,255))
-        draw.rectangle(box, outline=color, width=5)
-        # im.show()
-    im.show()
+# 获取误差较大的图片名
+def get_remove_file(filename):
+    data = []
+    f = open(filename, 'r', encoding="utf-8")
+    file_data = f.readlines()
+    zh2En = str.maketrans("'上午''下午'", "'AM''PM'", '\\')
+    for i in file_data:
+        i = i.translate(zh2En)
+        i = i.replace("\n", "")
+        data.append(i)
+    return data
 
 
-#=================== Process ===================#
+def judge_is_sky(img, threshold):
+    grey_img = img.convert('L')
+    grey_img_array = np.array(grey_img)
+    shape = grey_img_array.shape
+    mean = np.mean(grey_img_array)
+    var = np.var(grey_img_array)
+    # print(var)
+    if(var < threshold):
+        return True
+    else:
+        return False
+
+
 def process_crop(Heshan_imgset = r'F:\workplace\public_dataset\Heshan_imgset'):
-    paths_mask = Heshan_imgset + '/*/*/*[jpg, png, jpeg]'
-    img_paths = glob.glob(paths_mask)
-    
-    # Results
+    types = ('*.jpg', '*.png') 
+    img_paths = []
+    for files in types:
+        paths_mask = Heshan_imgset + '/*/*/' + files
+        img_paths.extend(glob.glob(paths_mask))
+ 
     result_folder = os.path.join(Heshan_imgset, 'Results') 
     if not os.path.exists(result_folder):
         os.makedirs(result_folder)
 
-    # Process
     data_label = pd.DataFrame()
-
-    # 获取剔除较大的图片列表
-    remove_image_list = get_remove_file(r'./remove_image.txt')
+    remove_image_list = get_remove_file(r'data/remove_image.txt')
     for i, filename in enumerate(img_paths):
         # 剔除误差较大的图片
         cur_im = os.path.split(filename)[1]
@@ -110,9 +129,9 @@ def process_crop(Heshan_imgset = r'F:\workplace\public_dataset\Heshan_imgset'):
                 is_sky = '0'
             else:
                 is_sky = '1'
-            # save
+
             patch_name = '-'.join([shot_time, ref_origin, is_sky, PM_25]) + '.bmp'
-            # print(os.path.join(result_folder, patch_name))
+            print(os.path.join(result_folder, patch_name))
             im_patch = np.array(im_patch, dtype='uint8')
             im_patch = Image.fromarray(im_patch)
             im_patch.save(os.path.join(result_folder, patch_name), 'bmp')
@@ -125,39 +144,10 @@ def process_crop(Heshan_imgset = r'F:\workplace\public_dataset\Heshan_imgset'):
     writer.save()
 
 
-# 获取误差较大的图片名
-def get_remove_file(filename):
-    data = []
-    f = open(filename,'r',encoding="utf-8")
-    file_data =  f.readlines()
-    zh2En = str.maketrans("'上午''下午'","'AM''PM'",'\\')
-    for i in file_data:
-        i = i.translate(zh2En)
-        i = i.replace("\n","")
-        data.append(i)
-    return data
-
-# 判断是否为天空
-def judge_is_sky(img,threshold):
-    # img.show()
-    grey_img = img.convert('L')
-    grey_img_array = np.array(grey_img)
-    shape = grey_img_array.shape
-    mean = np.mean(grey_img_array)
-    var = np.var(grey_img_array)
-    # print(var)
-    if(var<threshold):
-        return True
-    else:
-        return False
-
-
 if __name__ == '__main__':
-    test_im_crop()    # 查看图片切块效果
-    # k_test()
-    # k_image_path = r'F:\PG\envPro\Heshan_imgset'
     obj_data_path = r'..\客观图像质量指标测定-李展20210218.xlsx'
     sbj_data_path = r'..\志清雪清主观数据标定及加和分析20210218.xlsx'
+
     df_data = get_excel_data(obj_data_path, sbj_data_path)
     imageMapper = ImageMapper(df_data)
 
