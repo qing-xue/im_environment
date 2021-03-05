@@ -7,12 +7,13 @@ import os
 import utils
 import re
 import shutil
+import yaml
 
 
 def add_to_path(dst_path, pollution):
     """在目标路径之后追加标签目录 """
     labels = list(pollution.keys())
-    if PM25 <= pollution[labels[0]]:  # 可改进索引...
+    if PM25 <= pollution[labels[0]]: 
         dst_path = os.path.join(dst_path, labels[0])
     elif PM25 <= pollution[labels[1]]:
         dst_path = os.path.join(dst_path, labels[1])
@@ -22,7 +23,9 @@ def add_to_path(dst_path, pollution):
 
 
 # 仅使用取整后的 PM2.5 值
-datax_dir = r'F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky'
+with open(r'networks\config\config.yaml') as file:
+    config_list = yaml.load(file, Loader=yaml.FullLoader)
+    datax_dir = config_list['nonsky_dir']
 
 train_folder = os.path.join(datax_dir, 'train') 
 val_folder = os.path.join(datax_dir, 'val') 

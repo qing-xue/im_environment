@@ -10,13 +10,19 @@ from torchvision import datasets, models, transforms
 import os
 import utils
 from models import visualize_model, eval_model, train_model
+import yaml
 
-# use_gpu = torch.cuda.is_available()
-use_gpu = False
+use_gpu = torch.cuda.is_available()
+# use_gpu = False
 if use_gpu:
     print("Using CUDA")
 
-data_dir = r'F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky'
+with open(r'networks\config\config.yaml') as file:
+    config_list = yaml.load(file, Loader=yaml.FullLoader)
+    data_dir = config_list['nonsky_dir']
+    train_fig = config_list['train']
+    train_epochs = train_fig['epochs']
+
 TRAIN = 'train'
 VAL = 'val'
 
@@ -74,18 +80,14 @@ vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
 print(vgg16)
 
 if use_gpu:
-    vgg16.cuda() #.cuda() will move everything to the GPU side
+    vgg16.cuda()  #.cuda() will move everything to the GPU side
     
 criterion = nn.CrossEntropyLoss()
 optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
-print("Test before training")
-# eval_model(vgg16, criterion, dataloaders, VAL, use_gpu)
-# visualize_model(vgg16, dataloaders, VAL)  # test before training
-
 vgg16 = train_model(dataloaders, TRAIN, VAL, vgg16, criterion, 
-            optimizer_ft, exp_lr_scheduler, num_epochs=2)
+            optimizer_ft, exp_lr_scheduler, num_epochs=train_epochs, use_gpu=use_gpu)
 torch.save(vgg16.state_dict(), 'networks/VGG10/VGG16_dataset.pt')
 # eval_model(vgg16, criterion, dataloaders, VAL)
 # visualize_model(vgg16, num_images=32)
