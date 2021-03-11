@@ -5,7 +5,7 @@ import copy
 import utils
 
 
-def visualize_model(vgg, dataloaders, num_images=6, use_gpu=True):
+def visualize_model(vgg, dataloaders, num_images=6, class_names=None, use_gpu=True):
     """预测结果可视化
 
     参数说明：
@@ -34,9 +34,9 @@ def visualize_model(vgg, dataloaders, num_images=6, use_gpu=True):
         predicted_labels = [preds[j] for j in range(inputs.size()[0])]
         
         print("Ground truth:")
-        utils.show_databatch(inputs.data.cpu(), labels.data.cpu())
+        utils.show_databatch(inputs.data.cpu(), labels.data.cpu(), class_names)
         print("Prediction:")
-        utils.show_databatch(inputs.data.cpu(), predicted_labels)
+        utils.show_databatch(inputs.data.cpu(), predicted_labels, class_names)
         
         del inputs, labels, outputs, preds, predicted_labels
         torch.cuda.empty_cache()
