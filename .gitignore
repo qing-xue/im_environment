@@ -1,7 +1,8 @@
 *.xlsx
 excel/
 networks/VGG16/
-networks/config/
+.idea/
+networks/log.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

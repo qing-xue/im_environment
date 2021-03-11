@@ -1,13 +1,16 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.optim import lr_scheduler
 from torch.autograd import Variable
 import time
 import copy
+import utils
 
 
-def visualize_model(vgg, dataloaders, TEST, num_images=6):
+def visualize_model(vgg, dataloaders, num_images=6, use_gpu=True):
+    """预测结果可视化
+
+    参数说明：
+        dataloaders: 载入测试数据 ['test'] or ['val']
+    """
     was_training = vgg.training
     
     # Set model for evaluation
@@ -16,7 +19,7 @@ def visualize_model(vgg, dataloaders, TEST, num_images=6):
     
     images_so_far = 0
 
-    for i, data in enumerate(dataloaders[TEST]):
+    for i, data in enumerate(dataloaders['val']):
         inputs, labels = data
         size = inputs.size()[0]
         
@@ -31,9 +34,9 @@ def visualize_model(vgg, dataloaders, TEST, num_images=6):
         predicted_labels = [preds[j] for j in range(inputs.size()[0])]
         
         print("Ground truth:")
-        show_databatch(inputs.data.cpu(), labels.data.cpu())
+        utils.show_databatch(inputs.data.cpu(), labels.data.cpu())
         print("Prediction:")
-        show_databatch(inputs.data.cpu(), predicted_labels)
+        utils.show_databatch(inputs.data.cpu(), predicted_labels)
         
         del inputs, labels, outputs, preds, predicted_labels
         torch.cuda.empty_cache()
@@ -45,18 +48,21 @@ def visualize_model(vgg, dataloaders, TEST, num_images=6):
     vgg.train(mode=was_training)  # Revert model back to original training state
 
 
-def eval_model(vgg, criterion, dataloaders, TEST, use_gpu=True):
+def eval_model(vgg, criterion, dataloaders, use_gpu=True):
+    """在测试集上评估模型
+
+    参数说明：
+        dataloaders: 载入测试数据 ['test'] or ['val']
+    """
     since = time.time()
-    avg_loss = 0
-    avg_acc = 0
     loss_test = 0
     acc_test = 0
     
-    test_batches = len(dataloaders[TEST])
+    test_batches = len(dataloaders['val'])
     print("Evaluating model")
     print('-' * 10)
     
-    for i, data in enumerate(dataloaders[TEST]):
+    for i, data in enumerate(dataloaders['val']):
         if i % 100 == 0:
             print("\rTest batch {}/{}".format(i, test_batches), end='', flush=True)
 
@@ -80,8 +86,10 @@ def eval_model(vgg, criterion, dataloaders, TEST, use_gpu=True):
         del inputs, labels, outputs, preds
         torch.cuda.empty_cache()
         
-    avg_loss = loss_test / dataset_sizes[TEST]
-    avg_acc = acc_test / dataset_sizes[TEST]
+    # avg_loss = loss_test / dataset_sizes[TEST]
+    avg_loss = loss_test / test_batches
+    # avg_acc = acc_test / dataset_sizes[TEST]
+    avg_acc = acc_test / test_batches
         
     elapsed_time = time.time() - since
     print()
@@ -91,19 +99,21 @@ def eval_model(vgg, criterion, dataloaders, TEST, use_gpu=True):
     print('-' * 10)
 
 
-def train_model(dataloaders, TRAIN, VAL, vgg, criterion, optimizer, 
-        scheduler, num_epochs=10, use_gpu=False):
+def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=False):
+    """训练模型
+
+    参数说明：
+        dataloaders: 载入训练、验证数据 ['train', 'val']
+        vgg: 预训练模型
+        criterion: 计算损失
+        optimizer: 优化器
+    """
     since = time.time()
     best_model_wts = copy.deepcopy(vgg.state_dict())
     best_acc = 0.0
     
-    avg_loss = 0
-    avg_acc = 0
-    avg_loss_val = 0
-    avg_acc_val = 0
-    
-    train_batches = len(dataloaders[TRAIN])
-    val_batches = len(dataloaders[VAL])
+    train_batches = len(dataloaders['train'])
+    val_batches = len(dataloaders['val'])
     
     for epoch in range(num_epochs):
         print("Epoch {}/{}".format(epoch, num_epochs))
@@ -116,13 +126,9 @@ def train_model(dataloaders, TRAIN, VAL, vgg, criterion, optimizer,
         
         vgg.train(True)
                 
-        for i, data in enumerate(dataloaders[TRAIN]):
-            if i % 100 == 0:
-                print("\rTraining batch {}/{}".format(i, train_batches / 2), end='', flush=True)
-                
-            # Use half training dataset
-            if i >= train_batches / 2:
-                break
+        for i, data in enumerate(dataloaders['train']):
+            if i % 10 == 0:
+                print("\rTraining batch {}/{}".format(i, train_batches), end='', flush=True)
                 
             inputs, labels = data
             
@@ -148,16 +154,18 @@ def train_model(dataloaders, TRAIN, VAL, vgg, criterion, optimizer,
         
         print()
         # * 2 as we only used half of the dataset
-        avg_loss = loss_train * 2 / dataset_sizes[TRAIN]
-        avg_acc = acc_train * 2 / dataset_sizes[TRAIN]
+        # avg_loss = loss_train * 2 / dataset_sizes[TRAIN]
+        avg_loss = loss_train / train_batches
+        # avg_acc = acc_train * 2 / dataset_sizes[TRAIN]
+        avg_acc = acc_train / train_batches
         
         vgg.train(False)
         vgg.eval()
             
-        for i, data in enumerate(dataloaders[VAL]):
+        for i, data in enumerate(dataloaders['val']):
             if i % 100 == 0:
                 print("\rValidation batch {}/{}".format(i, val_batches), end='', flush=True)
-                
+
             inputs, labels = data
             
             if use_gpu:
@@ -177,8 +185,10 @@ def train_model(dataloaders, TRAIN, VAL, vgg, criterion, optimizer,
             del inputs, labels, outputs, preds
             torch.cuda.empty_cache()
         
-        avg_loss_val = loss_val / dataset_sizes[VAL]
-        avg_acc_val = acc_val / dataset_sizes[VAL]
+        # avg_loss_val = loss_val / dataset_sizes[VAL]
+        avg_loss_val = loss_val / val_batches
+        # avg_acc_val = acc_val / dataset_sizes[VAL]
+        avg_acc_val = acc_val / val_batches
                 
         print()
         print("Epoch {} result: ".format(epoch))

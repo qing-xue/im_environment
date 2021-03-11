@@ -3,12 +3,8 @@ from __future__ import print_function, division
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.optim import lr_scheduler
-import numpy as np
-import torchvision
 from torchvision import datasets, models, transforms
 import os
-import utils
 from models import visualize_model, eval_model, train_model
 import yaml
 
@@ -17,7 +13,7 @@ use_gpu = torch.cuda.is_available()
 if use_gpu:
     print("Using CUDA")
 
-with open(r'networks\config\config.yaml') as file:
+with open(r'config\config.yaml') as file:
     config_list = yaml.load(file, Loader=yaml.FullLoader)
     data_dir = config_list['nonsky_dir']
     train_fig = config_list['train']
@@ -50,7 +46,7 @@ image_datasets = {
 dataloaders = {
     x: torch.utils.data.DataLoader(
         image_datasets[x], batch_size=8,
-        shuffle=True, num_workers=0  # 单个线程？
+        shuffle=True, num_workers=0  # 单个线程
     )
     for x in [TRAIN, VAL]
 }
@@ -65,7 +61,7 @@ print(image_datasets[TRAIN].classes)
 
 # Load the pretrained model from pytorch
 vgg16 = models.vgg16_bn()
-vgg16.load_state_dict(torch.load("networks/VGG16/vgg16_bn.pth"))
+vgg16.load_state_dict(torch.load("VGG16/vgg16_bn.pth"))
 print(vgg16.classifier[6].out_features)  # 1000 
 
 # Freeze training for all layers
@@ -84,11 +80,9 @@ if use_gpu:
     
 criterion = nn.CrossEntropyLoss()
 optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
-vgg16 = train_model(dataloaders, TRAIN, VAL, vgg16, criterion, 
-            optimizer_ft, exp_lr_scheduler, num_epochs=train_epochs, use_gpu=use_gpu)
-torch.save(vgg16.state_dict(), 'networks/VGG10/VGG16_dataset.pt')
-# eval_model(vgg16, criterion, dataloaders, VAL)
+vgg16 = train_model(dataloaders, vgg16, criterion, optimizer_ft, num_epochs=train_epochs, use_gpu=use_gpu)
+torch.save(vgg16.state_dict(), 'VGG16/VGG16_dataset.pt')
+# eval_model(vgg16, criterion, dataloaders, use_gpu)
 # visualize_model(vgg16, num_images=32)
 
