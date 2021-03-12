@@ -76,7 +76,7 @@ vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
 print(vgg16)
 
 if use_gpu:
-    vgg16.cuda()  #.cuda() will move everything to the GPU side
+    vgg16.cuda()  # .cuda() will move everything to the GPU side
     
 criterion = nn.CrossEntropyLoss()
 optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)

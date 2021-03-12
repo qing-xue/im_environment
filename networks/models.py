@@ -63,17 +63,18 @@ def eval_model(vgg, criterion, dataloaders, use_gpu=True):
     print('-' * 10)
     
     for i, data in enumerate(dataloaders['val']):
-        if i % 100 == 0:
+        if i % 10 == 0:
             print("\rTest batch {}/{}".format(i, test_batches), end='', flush=True)
 
         vgg.train(False)
         vgg.eval()
         inputs, labels = data
-        
-        if use_gpu:
-            inputs, labels = Variable(inputs.cuda(), volatile=True), Variable(labels.cuda(), volatile=True)
-        else:
-            inputs, labels = Variable(inputs, volatile=True), Variable(labels, volatile=True)
+
+        with torch.no_grad():
+            if use_gpu:
+                inputs, labels = inputs.cuda(), labels.cuda()
+            else:
+                inputs, labels = inputs, labels
 
         outputs = vgg(inputs)
 
@@ -85,14 +86,11 @@ def eval_model(vgg, criterion, dataloaders, use_gpu=True):
 
         del inputs, labels, outputs, preds
         torch.cuda.empty_cache()
-        
-    # avg_loss = loss_test / dataset_sizes[TEST]
+
     avg_loss = loss_test / test_batches
-    # avg_acc = acc_test / dataset_sizes[TEST]
     avg_acc = acc_test / test_batches
         
     elapsed_time = time.time() - since
-    print()
     print("Evaluation completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
     print("Avg loss (test): {:.4f}".format(avg_loss))
     print("Avg acc (test): {:.4f}".format(avg_acc))
@@ -109,9 +107,6 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=F
         optimizer: 优化器
     """
     since = time.time()
-    best_model_wts = copy.deepcopy(vgg.state_dict())
-    best_acc = 0.0
-    
     train_batches = len(dataloaders['train'])
     
     for epoch in range(num_epochs):
@@ -119,9 +114,7 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=F
         print('-' * 10)
         
         loss_train = 0
-        loss_val = 0
         acc_train = 0
-        acc_val = 0
         
         vgg.train(True)
                 
@@ -150,8 +143,7 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=F
             
             del inputs, labels, outputs, preds
             torch.cuda.empty_cache()
-        
-        print()
+
         avg_loss = loss_train / train_batches
         avg_acc = acc_train / train_batches
 
@@ -162,7 +154,5 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=F
         
     elapsed_time = time.time() - since
     print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
-    print("Best acc: {:.4f}".format(best_acc))
-        
-    vgg.load_state_dict(best_model_wts)
+
     return vgg
