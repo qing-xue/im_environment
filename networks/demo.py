@@ -13,7 +13,7 @@ use_gpu = torch.cuda.is_available()
 if use_gpu:
     print("Using CUDA")
 
-with open(r'config\config.yaml') as file:
+with open('config/config.yaml') as file:
     config_list = yaml.load(file, Loader=yaml.FullLoader)
     data_dir = config_list['nonsky_dir']
     train_fig = config_list['train']

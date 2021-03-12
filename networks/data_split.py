@@ -23,7 +23,7 @@ def add_to_path(dst_path, pollution):
 
 
 # 仅使用取整后的 PM2.5 值
-with open(r'config\config.yaml') as file:
+with open('config/config.yaml') as file:
     config_list = yaml.load(file, Loader=yaml.FullLoader)
     datax_dir = config_list['nonsky_dir']
 
