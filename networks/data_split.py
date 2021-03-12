@@ -8,8 +8,6 @@ import utils
 import re
 import shutil
 import yaml
-import sys
-sys.path.append()
 
 
 def add_to_path(dst_path, pollution):
