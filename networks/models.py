@@ -103,7 +103,7 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=F
     """训练模型
 
     参数说明：
-        dataloaders: 载入训练、验证数据 ['train', 'val']
+        dataloaders: 载入训练、验证数据 ['train']
         vgg: 预训练模型
         criterion: 计算损失
         optimizer: 优化器
@@ -113,7 +113,6 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=F
     best_acc = 0.0
     
     train_batches = len(dataloaders['train'])
-    val_batches = len(dataloaders['val'])
     
     for epoch in range(num_epochs):
         print("Epoch {}/{}".format(epoch, num_epochs))
@@ -153,58 +152,15 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=F
             torch.cuda.empty_cache()
         
         print()
-        # * 2 as we only used half of the dataset
-        # avg_loss = loss_train * 2 / dataset_sizes[TRAIN]
         avg_loss = loss_train / train_batches
-        # avg_acc = acc_train * 2 / dataset_sizes[TRAIN]
         avg_acc = acc_train / train_batches
-        
-        vgg.train(False)
-        vgg.eval()
-            
-        for i, data in enumerate(dataloaders['val']):
-            if i % 100 == 0:
-                print("\rValidation batch {}/{}".format(i, val_batches), end='', flush=True)
 
-            inputs, labels = data
-            
-            if use_gpu:
-                inputs, labels = Variable(inputs.cuda(), volatile=True), Variable(labels.cuda(), volatile=True)
-            else:
-                inputs, labels = Variable(inputs, volatile=True), Variable(labels, volatile=True)
-                        
-            optimizer.zero_grad()
-            outputs = vgg(inputs)
-            
-            _, preds = torch.max(outputs.data, 1)
-            loss = criterion(outputs, labels)
-            
-            loss_val += loss.data  # data[0] for GPU?
-            acc_val += torch.sum(preds == labels.data)
-            
-            del inputs, labels, outputs, preds
-            torch.cuda.empty_cache()
-        
-        # avg_loss_val = loss_val / dataset_sizes[VAL]
-        avg_loss_val = loss_val / val_batches
-        # avg_acc_val = acc_val / dataset_sizes[VAL]
-        avg_acc_val = acc_val / val_batches
-                
-        print()
         print("Epoch {} result: ".format(epoch))
         print("Avg loss (train): {:.4f}".format(avg_loss))
         print("Avg acc (train): {:.4f}".format(avg_acc))
-        print("Avg loss (val): {:.4f}".format(avg_loss_val))
-        print("Avg acc (val): {:.4f}".format(avg_acc_val))
         print('-' * 10)
-        print()
-        
-        if avg_acc_val > best_acc:
-            best_acc = avg_acc_val
-            best_model_wts = copy.deepcopy(vgg.state_dict())
         
     elapsed_time = time.time() - since
-    print()
     print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
     print("Best acc: {:.4f}".format(best_acc))
         

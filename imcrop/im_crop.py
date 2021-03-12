@@ -103,7 +103,7 @@ def process_crop(Heshan_imgset = r'F:\workplace\public_dataset\Heshan_imgset'):
         os.makedirs(result_folder)
 
     data_label = pd.DataFrame()
-    remove_image_list = get_remove_file(r'data/remove_image.txt')
+    remove_image_list = get_remove_file(r'../data/remove_image.txt')
     for i, filename in enumerate(img_paths):
         # 剔除误差较大的图片
         cur_im = os.path.split(filename)[1]

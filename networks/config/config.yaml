@@ -2,4 +2,4 @@
 nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 
 train:
-  epochs: 2
+  epochs: 20
