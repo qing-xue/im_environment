@@ -58,11 +58,11 @@ def eval_model(vgg, criterion, dataloaders, use_gpu=True):
     loss_test = 0
     acc_test = 0
     
-    test_batches = len(dataloaders['val'])
+    test_batches = len(dataloaders['train'])
     print("Evaluating model")
     print('-' * 10)
     
-    for i, data in enumerate(dataloaders['val']):
+    for i, data in enumerate(dataloaders['train']):
         if i % 10 == 0:
             print("\rTest batch {}/{}".format(i, test_batches), end='', flush=True)
 
