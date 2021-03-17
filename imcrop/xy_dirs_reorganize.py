@@ -6,6 +6,8 @@
 需要在 Results/ 目录下包含所有的原始图像块；从 'crop_labels.xlsx' 中
 切分出单条的标签信息存放至标签文件夹下。
 
+TODO: 可以把这个程序合并到 make_dataset.py 里面
+
 """
 import os
 import re

@@ -107,6 +107,9 @@ def mk_dataset(Heshan_imgset, imCropper, imMapper):
         Heshan_imgset: 原始图像路径
         imCropper: 图像切块方式
         imMapper: 图像-表格数据映射
+    Output:
+        Result/ 下的所有图像块
+        当前文件夹下 'crop_labels.xlsx' 各个图像块对应的数据
     """
     types = ('*.jpg', '*.png') 
     img_paths = []
