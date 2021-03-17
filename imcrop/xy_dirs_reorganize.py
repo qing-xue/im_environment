@@ -62,7 +62,10 @@ def standardize_label_folder():
             print(img_id, " ==> ", nonsky_labels_folder)
 
 
-patch_dir = r'F:\workplace\public_dataset\Heshan_imgset\Results'
+# 全局变量
+patch_dir = r'D:\workplace\dataset\Heshan_imgset\Heshan_imgset\Results'
+# 'crop_labels.xlsx' 默认保存在当前文件夹，由 make_dataset.py 处理所得
 
 if __name__ == '__main__':
+    standardize_data_folder()
     standardize_label_folder()

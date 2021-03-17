@@ -13,21 +13,30 @@ import numpy as np
 import re
 import pandas as pd
 from PIL import Image
-from utils import ImageMapper, get_excel_data
+from utils_xls import ImageMapper, get_excel_data
 
 
 class ImageCropper():
     
-    def __init__(self, im):
-        self.im = im
+    def __init__(self, box_w=256, box_h=256, stride_w=256, stride_h=256, epsilon=10):
+        self.box_w = box_w
+        self.box_h = box_h
+        self.stride_w = stride_w
+        self.stride_h = stride_h
+        self.epsilon = epsilon
 
-    def crop(self, box_w=256, box_h=256, stride_w=256, stride_h=256, epsilon=10):
+    def crop(self, im):
         """Crop image to get patches.
 
         :param epsilon: 右下方边界容忍值，低于之则直接丢弃
         :return: 返回截取的 patches 以及其对应于原图的坐标
         """
-        im = self.im
+        box_w = self.box_w
+        box_h = self.box_h
+        stride_w = self.stride_w
+        stride_h = self.stride_h
+        epsilon = self.epsilon
+
         width = im.size[0]
         height = im.size[1]
         if width < box_w or height < box_h:
@@ -91,7 +100,14 @@ def judge_is_sky(img, threshold):
         return False
 
 
-def process_crop(Heshan_imgset = r'F:\workplace\public_dataset\Heshan_imgset'):
+def mk_dataset(Heshan_imgset, imCropper, imMapper):
+    """ 制作数据集
+
+    Params:
+        Heshan_imgset: 原始图像路径
+        imCropper: 图像切块方式
+        imMapper: 图像-表格数据映射
+    """
     types = ('*.jpg', '*.png') 
     img_paths = []
     for files in types:
@@ -110,14 +126,13 @@ def process_crop(Heshan_imgset = r'F:\workplace\public_dataset\Heshan_imgset'):
         if cur_im in remove_image_list:
             continue
         im = Image.open(filename)
-        imCropper = ImageCropper(im)
-        patches, boxes = imCropper.crop(box_w=256, box_h=256, stride_w=256, stride_h=256)
+        patches, boxes = imCropper.crop(im)
         
         # 拍摄时间--PM2.5值
         ch2En = str.maketrans("'上午''下午'", "'AM''PM'")
         img_id = re.split('[/\\\\.]', filename)[-2]
         shot_time = img_id.translate(ch2En)[4:]
-        row_data = imageMapper.get_row(img_id)
+        row_data = imMapper.get_row(img_id)
         PM_25 = str(round(row_data['PM2.5'].values[0]))
         # 图块位置--天空/非天空
         threshold = 120     # 划分天空区域的方差阈值
@@ -145,10 +160,12 @@ def process_crop(Heshan_imgset = r'F:\workplace\public_dataset\Heshan_imgset'):
 
 
 if __name__ == '__main__':
-    obj_data_path = r'..\客观图像质量指标测定-李展20210218.xlsx'
-    sbj_data_path = r'..\志清雪清主观数据标定及加和分析20210218.xlsx'
-
-    df_data = get_excel_data(obj_data_path, sbj_data_path)
+    # 获取表格数据和图像-表格映射对象
+    xls_data_dir = r'D:\workplace\620资料\0318 组会-环境数据预处理介绍'  # 注意防止信息泄露
+    df_data = get_excel_data(xls_data_dir)
     imageMapper = ImageMapper(df_data)
 
-    process_crop()
+    # 处理切块
+    Heshan_imgset = r'D:\workplace\dataset\Heshan_imgset\Heshan_imgset'
+    imCropper = ImageCropper(box_w=256, box_h=256, stride_w=256, stride_h=256)
+    mk_dataset(Heshan_imgset, imCropper, imageMapper)
