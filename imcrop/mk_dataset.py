@@ -14,6 +14,7 @@ import re
 import pandas as pd
 from PIL import Image
 from utils_xls import ImageMapper, get_excel_data
+from xy_dirs_reorganize import standardize_data_folder
 
 
 class ImageCropper():
@@ -84,6 +85,7 @@ def get_remove_file(filename):
         i = i.translate(zh2En)
         i = i.replace("\n", "")
         data.append(i)
+    f.close()
     return data
 
 
@@ -152,23 +154,29 @@ def mk_dataset(Heshan_imgset, imCropper, imMapper):
             print(os.path.join(result_folder, patch_name))
             im_patch = np.array(im_patch, dtype='uint8')
             im_patch = Image.fromarray(im_patch)
-            im_patch.save(os.path.join(result_folder, patch_name), 'bmp')
             new_row = row_data
             new_row.loc[0, 'IMG_ID'] = patch_name
             data_label = data_label.append(new_row, ignore_index=True)
+            # Save as a single file
+            im_patch.save(os.path.join(result_folder, patch_name), 'bmp')
+            new_row.to_csv('{}.csv'.format(os.path.join(result_folder, patch_name)), index=True)
 
-    writer = pd.ExcelWriter('crop_labels.xlsx')
+    writer = pd.ExcelWriter(os.path.join(result_folder, 'crop_labels.xlsx'))
     data_label.to_excel(writer, float_format='%.5f')
     writer.save()
+    writer.close()
 
 
 if __name__ == '__main__':
     # 获取表格数据和图像-表格映射对象
-    xls_data_dir = r'D:\workplace\620资料\0318 组会-环境数据预处理介绍'  # 注意防止信息泄露
-    df_data = get_excel_data(xls_data_dir)
+    df_data = get_excel_data(r'D:\workplace\620资料\0318 组会-环境数据预处理介绍')
     imageMapper = ImageMapper(df_data)
 
-    # 处理切块
+    # 处理切块数据集
     Heshan_imgset = r'D:\workplace\dataset\Heshan_imgset\Heshan_imgset'
     imCropper = ImageCropper(box_w=256, box_h=256, stride_w=256, stride_h=256)
     mk_dataset(Heshan_imgset, imCropper, imageMapper)
+
+    # 将 Results/ 下的原始图像块归入 sky/ 和 non_sky/ 文件夹
+    standardize_data_folder(os.path.join(Heshan_imgset, 'Results'))
+

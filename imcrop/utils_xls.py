@@ -66,12 +66,15 @@ def get_excel_data(xls_data_dir=r'../'):
     writer = pd.ExcelWriter(os.path.join(xls_data_dir, 'temp_obj.xlsx'))
     data_obj.to_excel(writer, float_format='%.5f')
     writer.save()
+    writer.close()
     writer = pd.ExcelWriter(os.path.join(xls_data_dir, 'temp_sbj.xlsx'))
     data_sbj.to_excel(writer, float_format='%.5f')
     writer.save()
+    writer.close()
     writer = pd.ExcelWriter(os.path.join(xls_data_dir, 'temp_all.xlsx'))
     df_data.to_excel(writer, float_format='%.5f')
     writer.save()
+    writer.close()
 
     return df_data
 
