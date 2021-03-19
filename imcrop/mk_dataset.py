@@ -88,8 +88,12 @@ def get_remove_file(filename):
     f.close()
     return data
 
-
-def judge_is_sky(img, threshold):
+# 判断天空区域，threshold为方差阈值，r_threshold为红色通道阈值，用于筛选出非天空区域中受日落影响较大的图
+def judge_is_sky(img, threshold, r_threshold=100):
+    r,g,b = img.split()
+    r_array = np.array(r)
+    g_array = np.array(g)
+    b_array = np.array(b)
     grey_img = img.convert('L')
     grey_img_array = np.array(grey_img)
     shape = grey_img_array.shape
@@ -99,6 +103,8 @@ def judge_is_sky(img, threshold):
     if(var < threshold):
         return True
     else:
+        if(np.mean(r_array)>r_threshold):
+            return True
         return False
 
 
