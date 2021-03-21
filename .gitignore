@@ -1,6 +1,10 @@
 *.xlsx
 excel/
 networks/VGG16/
+<<<<<<< HEAD
+=======
+.idea/
+>>>>>>> 893f9ad47545be16709bffd69497eb3f042f26d9
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

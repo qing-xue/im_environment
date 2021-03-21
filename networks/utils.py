@@ -19,7 +19,9 @@ def imshow(inp, title=None):
     plt.pause(0.001)
 
 
-def show_databatch(inputs, classes, class_names):
+def show_databatch(inputs, classes, class_names=None):
+    if not class_names:
+        class_names = classes
     out = torchvision.utils.make_grid(inputs)
     imshow(out, title=[class_names[x] for x in classes])
 

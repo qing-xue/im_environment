@@ -1,0 +1,34 @@
+【100 epochs】--------------------------------------------------------------
+问题探究：
+    1、验证集过大，增大训练/验证比例
+    2、训练集上精度也很低，可能训练过程有误
+---------- 验证集
+Test batch 350/358Evaluation completed in 7m 43s
+Avg loss (test): 3.6938
+Avg acc (test): 3.8966
+----------
+---------- 训练集
+Test batch 1240/1244Evaluation completed in 26m 14s
+Avg loss (test): 0.2169
+Avg acc (test): 7.2484
+----------
+
+【2 epochs】----------------------------------------------------------------
+Epoch 0 result:
+Avg loss (train): 0.8169
+Avg acc (train): 4.5161
+Avg loss (val): 1.3110
+Avg acc (val): 3.4385
+----------
+Epoch 1/2
+----------
+Training batch 620/622.0
+Validation batch 300/358
+Epoch 1 result:
+Avg loss (train): 0.7865
+Avg acc (train): 4.5531
+Avg loss (val): 1.2316
+Avg acc (val): 4.7654
+----------
+Training completed in 112m 30s
+Best acc: 4.7654

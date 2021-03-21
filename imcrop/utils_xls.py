@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 
 
@@ -50,7 +51,9 @@ def read_sbjective_data(sbj_data_path=r'..\志清雪清主观数据标定及加�
     return pd_sbj_data
 
 
-def get_excel_data(obj_data_path, sbj_data_path):
+def get_excel_data(xls_data_dir=r'../'):
+    obj_data_path = os.path.join(xls_data_dir, '客观图像质量指标测定-李展20210218.xlsx')
+    sbj_data_path = os.path.join(xls_data_dir, '志清雪清主观数据标定及加和分析20210218.xlsx')
     data_obj = read_objective_data(obj_data_path)
     data_sbj = read_sbjective_data(sbj_data_path)
 
@@ -60,20 +63,28 @@ def get_excel_data(obj_data_path, sbj_data_path):
     df_data = pd.merge(data_obj, data_sbj, on='IMG_ID',  how='outer', suffixes=['_L', '_R'])
     
     # tmperoally save
-    writer = pd.ExcelWriter('temp_obj.xlsx')
+    writer = pd.ExcelWriter(os.path.join(xls_data_dir, 'temp_obj.xlsx'))
     data_obj.to_excel(writer, float_format='%.5f')
     writer.save()
-    writer = pd.ExcelWriter('temp_sbj.xlsx')
+    writer.close()
+    writer = pd.ExcelWriter(os.path.join(xls_data_dir, 'temp_sbj.xlsx'))
     data_sbj.to_excel(writer, float_format='%.5f')
     writer.save()
-    writer = pd.ExcelWriter('temp_all.xlsx')
+    writer.close()
+    writer = pd.ExcelWriter(os.path.join(xls_data_dir, 'temp_all.xlsx'))
     df_data.to_excel(writer, float_format='%.5f')
     writer.save()
+    writer.close()
 
     return df_data
 
 
 class ImageMapper:
+    """进行图像到表格数据的映射，以IMG_ID为标识
+
+    注意这里采用了比较笨的方式，是根据每张图像的ID一个个地寻找Excel表格里的对应。
+    还有一种方法是直接切分表格里的数据，然后用文件名寻找图片。
+    """
 
     def __init__(self, df_data):
         self.data = df_data

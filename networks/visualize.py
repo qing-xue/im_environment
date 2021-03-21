@@ -2,18 +2,16 @@ from __future__ import print_function, division
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from torchvision import datasets, models, transforms
 import os
-from models import train_model
+from models import visualize_model, eval_model
 import yaml
 
 use_gpu = torch.cuda.is_available()
-# use_gpu = False
 if use_gpu:
     print("Using CUDA")
 
-with open('config/config.yaml') as file:
+with open(r'config\config.yaml') as file:
     config_list = yaml.load(file, Loader=yaml.FullLoader)
     data_dir = config_list['nonsky_dir']
     train_fig = config_list['train']
@@ -38,7 +36,7 @@ data_transforms = {
 }
 image_datasets = {
     x: datasets.ImageFolder(
-        os.path.join(data_dir, x), 
+        os.path.join(data_dir, x),
         transform=data_transforms[x]
     )
     for x in [TRAIN, VAL]
@@ -58,29 +56,19 @@ for x in [TRAIN, VAL]:
 print("Classes: ")
 class_names = image_datasets[TRAIN].classes
 print(image_datasets[TRAIN].classes)
-
 # Load the pretrained model from pytorch
 vgg16 = models.vgg16_bn()
-vgg16.load_state_dict(torch.load("VGG16/vgg16_bn.pth"))
-print(vgg16.classifier[6].out_features)  # 1000 
-
-# Freeze training for all layers
-for param in vgg16.features.parameters():
-    param.require_grad = False
 
 # Newly created modules have require_grad=True by default
 num_features = vgg16.classifier[6].in_features
 features = list(vgg16.classifier.children())[:-1]  # Remove last layer
 features.extend([nn.Linear(num_features, len(class_names))])  # Add our layer with 3 outputs
 vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
-print(vgg16)
-
 if use_gpu:
-    vgg16.cuda()  # .cuda() will move everything to the GPU side
-    
+    vgg16.load_state_dict(torch.load('VGG16/VGG16_100.pt'))
+else:
+    vgg16.load_state_dict(torch.load('VGG16/VGG16_100.pt', map_location=torch.device('cpu')))
+
 criterion = nn.CrossEntropyLoss()
-optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
-
-vgg16 = train_model(dataloaders, vgg16, criterion, optimizer_ft, num_epochs=train_epochs, use_gpu=use_gpu)
-torch.save(vgg16.state_dict(), 'VGG16/VGG16_100.pt')
-
+eval_model(vgg16, criterion, dataloaders, use_gpu=use_gpu)
+# visualize_model(vgg16, dataloaders, num_images=32, class_names=class_names, use_gpu=use_gpu)

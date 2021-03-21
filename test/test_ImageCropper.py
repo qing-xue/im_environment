@@ -1,7 +1,7 @@
 import os
 import sys 
 sys.path.append(os.getcwd()) 
-from im_crop import ImageCropper
+from imcrop.mk_dataset import ImageCropper
 from PIL import Image, ImageDraw
 import random
 
