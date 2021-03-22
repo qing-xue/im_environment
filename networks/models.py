@@ -128,7 +128,7 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10):
             # if use_gpu:
             #     inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
             # else:
-            inputs, labels = Variable(inputs), Variable(labels)
+            inputs, labels = Variable(inputs.to(device)), Variable(labels.to(device))
             
             optimizer.zero_grad()     
             outputs = vgg(inputs)
