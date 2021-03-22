@@ -88,6 +88,7 @@ def get_remove_file(filename):
     f.close()
     return data
 
+
 # 判断天空区域，threshold为方差阈值，r_threshold为红色通道阈值，用于筛选出非天空区域中受日落影响较大的图
 def judge_is_sky(img, threshold, r_threshold=100):
     r,g,b = img.split()
@@ -122,7 +123,7 @@ def mk_dataset(Heshan_imgset, imCropper, imMapper):
     types = ('*.jpg', '*.png') 
     img_paths = []
     for files in types:
-        paths_mask = Heshan_imgset + '/*/*/' + files
+        paths_mask = Heshan_imgset + '/*/1/' + files
         img_paths.extend(glob.glob(paths_mask))
  
     result_folder = os.path.join(Heshan_imgset, 'Results') 
