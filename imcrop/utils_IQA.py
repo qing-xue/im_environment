@@ -3,9 +3,10 @@ from sklearn.metrics.cluster import entropy
 from skimage.measure import shannon_entropy
 from skimage import io, color, img_as_ubyte
 from matlab.AG import AG
+from matlab.FADE import FADE
 
 
-def get_FADE():
+def get_FADE(rgbImg):
     """Fog Aware Density Evaluator (FADE)
 
     paper: L. K. Choi, J. You, and A. C. Bovik,
@@ -13,7 +14,8 @@ def get_FADE():
         IEEE Transactions on Image Processing, vol. 24, no. 11
     site: http://live.ece.utexas.edu/research/fog/index.html
     """
-    pass
+    D, D_map = FADE(rgbImg)
+    return D
 
 
 def get_AG(rgbImg):
@@ -46,4 +48,5 @@ if __name__ == '__main__':
     for file in img_list:
         img = io.imread(file)
         # print((get_IE(img)))
-        print((get_AG(img)))
+        # print((get_AG(img)))
+        print((get_FADE(img)))
