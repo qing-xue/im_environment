@@ -1,11 +1,12 @@
 import torch
 from torch.autograd import Variable
 import time
-import copy
 import utils
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-def visualize_model(vgg, dataloaders, num_images=6, class_names=None, use_gpu=True):
+
+def visualize_model(vgg, dataloaders, num_images=6, class_names=None):
     """预测结果可视化
 
     参数说明：
@@ -23,10 +24,10 @@ def visualize_model(vgg, dataloaders, num_images=6, class_names=None, use_gpu=Tr
         inputs, labels = data
         size = inputs.size()[0]
         
-        if use_gpu:
-            inputs, labels = Variable(inputs.cuda(), volatile=True), Variable(labels.cuda(), volatile=True)
-        else:
-            inputs, labels = Variable(inputs, volatile=True), Variable(labels, volatile=True)
+        # if use_gpu:
+        #     inputs, labels = Variable(inputs.cuda(), volatile=True), Variable(labels.cuda(), volatile=True)
+        # else:
+        inputs, labels = Variable(inputs, volatile=True), Variable(labels, volatile=True)
         
         outputs = vgg(inputs)
         
@@ -48,7 +49,7 @@ def visualize_model(vgg, dataloaders, num_images=6, class_names=None, use_gpu=Tr
     vgg.train(mode=was_training)  # Revert model back to original training state
 
 
-def eval_model(vgg, criterion, dataloaders, use_gpu=True):
+def eval_model(vgg, criterion, dataloaders):
     """在测试集上评估模型
 
     参数说明：
@@ -71,10 +72,10 @@ def eval_model(vgg, criterion, dataloaders, use_gpu=True):
         inputs, labels = data
 
         with torch.no_grad():
-            if use_gpu:
-                inputs, labels = inputs.cuda(), labels.cuda()
-            else:
-                inputs, labels = inputs, labels
+            # if use_gpu:
+            #     inputs, labels = inputs.cuda(), labels.cuda()
+            # else:
+            inputs, labels = inputs, labels
 
         outputs = vgg(inputs)
 
@@ -97,7 +98,7 @@ def eval_model(vgg, criterion, dataloaders, use_gpu=True):
     print('-' * 10)
 
 
-def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=False):
+def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10):
     """训练模型
 
     参数说明：
@@ -124,10 +125,10 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10, use_gpu=F
                 
             inputs, labels = data
             
-            if use_gpu:
-                inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
-            else:
-                inputs, labels = Variable(inputs), Variable(labels)
+            # if use_gpu:
+            #     inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
+            # else:
+            inputs, labels = Variable(inputs), Variable(labels)
             
             optimizer.zero_grad()     
             outputs = vgg(inputs)

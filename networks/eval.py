@@ -65,9 +65,9 @@ features = list(vgg16.classifier.children())[:-1]  # Remove last layer
 features.extend([nn.Linear(num_features, len(class_names))])  # Add our layer with 3 outputs
 vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
 if use_gpu:
-    vgg16.load_state_dict(torch.load('VGG16/VGG16_100.pt'))
+    vgg16.load_state_dict(torch.load('VGG16/VGG16_20_a1.pt'))
 else:
-    vgg16.load_state_dict(torch.load('VGG16/VGG16_100.pt', map_location=torch.device('cpu')))
+    vgg16.load_state_dict(torch.load('VGG16/VGG16_20_a1.pt', map_location=torch.device('cpu')))
 
 criterion = nn.CrossEntropyLoss()
 eval_model(vgg16, criterion, dataloaders, use_gpu=use_gpu)

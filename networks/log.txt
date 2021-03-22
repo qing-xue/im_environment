@@ -1,3 +1,21 @@
+03-22 角度1[100 epochs]------------
+问题探究：
+    1、训练、验证集划分是否应该随机
+Training batch 230/236Epoch 99 result:
+Avg loss (train): 0.1710
+Avg acc (train): 7.5085
+----------
+
+03-22 角度1[20 epochs]------------
+Training batch 230/236Epoch 19 result:
+Avg loss (train): 0.4472
+Avg acc (train): 6.3517
+
+Test batch 230/236Evaluation completed in 7m 33s
+Avg loss (test): 0.3940
+Avg acc (test): 6.5424
+----------
+
 【100 epochs】--------------------------------------------------------------
 问题探究：
     1、验证集过大，增大训练/验证比例
