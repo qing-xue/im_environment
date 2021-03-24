@@ -7,9 +7,7 @@ import os
 from models import visualize_model, eval_model
 import yaml
 
-use_gpu = torch.cuda.is_available()
-if use_gpu:
-    print("Using CUDA")
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 with open(r'config\config.yaml') as file:
     config_list = yaml.load(file, Loader=yaml.FullLoader)
@@ -64,10 +62,8 @@ num_features = vgg16.classifier[6].in_features
 features = list(vgg16.classifier.children())[:-1]  # Remove last layer
 features.extend([nn.Linear(num_features, len(class_names))])  # Add our layer with 3 outputs
 vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
-if use_gpu:
-    vgg16.load_state_dict(torch.load('VGG16/VGG16_20_a1_retrain.pt'))
-else:
-    vgg16.load_state_dict(torch.load('VGG16/VGG16_20_a1_retrain.pt', map_location=torch.device('cpu')))
+
+vgg16.load_state_dict(torch.load('VGG16/VGG16_20_a1_retrain.pt', map_location=device))
 
 criterion = nn.CrossEntropyLoss()
 eval_model(vgg16, criterion, dataloaders)

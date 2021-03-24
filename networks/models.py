@@ -2,6 +2,7 @@ import torch
 from torch.autograd import Variable
 import time
 import utils
+import torch.nn as nn
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -153,52 +154,16 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10):
     return vgg
 
 
-def train_model_re(dataloaders, vgg, criterion, optimizer, num_epochs=10):
-    """训练回归模型
+def vgg_customize(vgg16, out):
+    """替换 vgg 网络最后一层的输出向量
 
-    参数说明：
-        dataloaders: 载入训练、验证数据 ['train']
-        vgg: 预训练模型
-        criterion: 计算损失
-        optimizer: 优化器
+    Params:
+        out: 输出向量个数
     """
-    since = time.time()
-    train_batches = len(dataloaders['train'])
+    num_features = vgg16.classifier[6].in_features
+    features = list(vgg16.classifier.children())[:-1]  # Remove last layer
+    features.extend([nn.Linear(num_features, out)])
+    vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
 
-    for epoch in range(num_epochs):
-        print("Epoch {}/{}".format(epoch, num_epochs))
-        print('-' * 10)
-
-        loss_train = 0
-        vgg.train(True)
-
-        for i, data in enumerate(dataloaders['train']):
-            if i % 10 == 0:
-                print("\rTraining batch {}/{}".format(i, train_batches), end='', flush=True)
-
-            inputs, labels = data
-            labels = labels.view(len(labels), -1)
-            inputs, labels = inputs.to(device, dtype=torch.float), labels.to(device, dtype=torch.float)
-
-            optimizer.zero_grad()
-            outputs = vgg(inputs)
-            loss = criterion(outputs, labels)
-
-            loss.backward()
-            optimizer.step()
-
-            loss_train += loss.data  # data[0] for GPU?
-
-            del inputs, labels, outputs
-            torch.cuda.empty_cache()
-
-        avg_loss = loss_train / train_batches
-
-        print("Epoch {} result: \n".format(epoch))
-        print("Avg loss (train): {:.4f}\n".format(avg_loss))
-        print('-' * 10)
-
-    elapsed_time = time.time() - since
-    print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
-
-    return vgg
+    print(vgg16)
+    return vgg16

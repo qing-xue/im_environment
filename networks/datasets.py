@@ -37,3 +37,6 @@ class ImagePMSet(data.Dataset):
 
     def __len__(self):
         return len(self.imgs)
+
+    def inverse_PM(self, PMs):
+        return PMs * self.PM_std + self.PM_mean

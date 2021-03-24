@@ -4,11 +4,62 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import models, transforms
 from datasets import ImagePMSet
+from models import vgg_customize
 import os
-from models import train_model_re
 import yaml
+import time
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+
+def train_model_re(dataloader, vgg, criterion, optimizer, num_epochs=10):
+    """训练回归模型
+
+    参数说明：
+        dataloaders: 载入训练数据. 后期可加验证集
+        vgg: 预训练模型
+        criterion: 计算损失
+        optimizer: 优化器
+    """
+    since = time.time()
+    train_batches = len(dataloader)
+
+    for epoch in range(num_epochs):
+        print("Epoch {}/{}".format(epoch, num_epochs))
+        print('-' * 10)
+        loss_train = 0
+        vgg.train(True)
+
+        for i, data in enumerate(dataloader):
+            if i % 10 == 0:
+                print("\rTraining batch {}/{}\n".format(i, train_batches), end='', flush=True)
+
+            inputs, labels = data
+            labels = labels.view(len(labels), -1)
+            inputs, labels = inputs.to(device, dtype=torch.float), labels.to(device, dtype=torch.float)
+
+            optimizer.zero_grad()
+            outputs = vgg(inputs)
+            loss = criterion(outputs, labels)
+
+            loss.backward()
+            optimizer.step()
+
+            loss_train += loss.data  # data[0] for GPU?
+
+            del inputs, labels, outputs
+            torch.cuda.empty_cache()
+
+        avg_loss = loss_train / train_batches
+        print("Epoch {} result: ".format(epoch))
+        print("Avg loss (train): {:.4f}".format(avg_loss))
+        print('-' * 10)
+
+    elapsed_time = time.time() - since
+    print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
+
+    return vgg
+
 
 with open('config/config.yaml') as file:
     config_list = yaml.load(file, Loader=yaml.FullLoader)
@@ -17,7 +68,7 @@ with open('config/config.yaml') as file:
     train_epochs = train_fig['epochs']
     train_pretrained = train_fig['pretrained']
 
-# 训练测试字典 key
+# 训练测试字典 key. 与目录结构相关
 TRAIN = 'train'
 VAL = 'val'
 
@@ -49,32 +100,24 @@ dataloaders = {
     )
     for x in [TRAIN, VAL]
 }
-dataset_sizes = {x: len(image_datasets[x]) for x in [TRAIN, VAL]}
 
+dataset_sizes = {x: len(image_datasets[x]) for x in [TRAIN, VAL]}
 for x in [TRAIN, VAL]:
     print("Loaded {} images under {}".format(dataset_sizes[x], x))
 
 # Load the pretrained model from pytorch
-# vgg16 = models.vgg16_bn()
 vgg16 = models.vgg16_bn(pretrained=train_pretrained)  # download 528M
-# vgg16.load_state_dict(torch.load("VGG16/vgg16_bn.pth"))
-
 if train_pretrained:
+    # Freeze training for all layers
     for param in vgg16.features.parameters():
-        param.require_grad = False  # Freeze training for all layers
+        param.require_grad = False
 
-# Newly created modules have require_grad=True by default
-num_features = vgg16.classifier[6].in_features
-features = list(vgg16.classifier.children())[:-1]  # Remove last layer
-features.extend([nn.Linear(num_features, 1)])
-vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
-print(vgg16)
-
+vgg16 = vgg_customize(vgg16, 1)
 vgg16.to(device)  # .cuda() will move everything to the GPU side
     
 criterion = nn.MSELoss()  # 回归问题改用均方误差
 optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
 
-vgg16 = train_model_re(dataloaders, vgg16, criterion, optimizer_ft, num_epochs=train_epochs)
+vgg16 = train_model_re(dataloaders['train'], vgg16, criterion, optimizer_ft, num_epochs=train_epochs)
 torch.save(vgg16.state_dict(), 'VGG16/VGG16_dataset.pt')
 
