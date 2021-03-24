@@ -23,11 +23,8 @@ def visualize_model(vgg, dataloaders, num_images=6, class_names=None):
     for i, data in enumerate(dataloaders['val']):
         inputs, labels = data
         size = inputs.size()[0]
-        
-        # if use_gpu:
-        #     inputs, labels = Variable(inputs.cuda(), volatile=True), Variable(labels.cuda(), volatile=True)
-        # else:
-        inputs, labels = Variable(inputs, volatile=True), Variable(labels, volatile=True)
+
+        inputs, labels = Variable(inputs.to(device), volatile=True), Variable(labels.to(device), volatile=True)
         
         outputs = vgg(inputs)
         
@@ -72,10 +69,7 @@ def eval_model(vgg, criterion, dataloaders):
         inputs, labels = data
 
         with torch.no_grad():
-            # if use_gpu:
-            #     inputs, labels = inputs.cuda(), labels.cuda()
-            # else:
-            inputs, labels = inputs, labels
+            inputs, labels = inputs.to(device), labels.to(device)
 
         outputs = vgg(inputs)
 
@@ -153,6 +147,57 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10):
         print("Avg acc (train): {:.4f}".format(avg_acc))
         print('-' * 10)
         
+    elapsed_time = time.time() - since
+    print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
+
+    return vgg
+
+
+def train_model_re(dataloaders, vgg, criterion, optimizer, num_epochs=10):
+    """训练回归模型
+
+    参数说明：
+        dataloaders: 载入训练、验证数据 ['train']
+        vgg: 预训练模型
+        criterion: 计算损失
+        optimizer: 优化器
+    """
+    since = time.time()
+    train_batches = len(dataloaders['train'])
+
+    for epoch in range(num_epochs):
+        print("Epoch {}/{}".format(epoch, num_epochs))
+        print('-' * 10)
+
+        loss_train = 0
+        vgg.train(True)
+
+        for i, data in enumerate(dataloaders['train']):
+            if i % 10 == 0:
+                print("\rTraining batch {}/{}".format(i, train_batches), end='', flush=True)
+
+            inputs, labels = data
+            labels = labels.view(len(labels), -1)
+            inputs, labels = inputs.to(device, dtype=torch.float), labels.to(device, dtype=torch.float)
+
+            optimizer.zero_grad()
+            outputs = vgg(inputs)
+            loss = criterion(outputs, labels)
+
+            loss.backward()
+            optimizer.step()
+
+            loss_train += loss.data  # data[0] for GPU?
+
+            del inputs, labels, outputs
+            torch.cuda.empty_cache()
+
+        avg_loss = loss_train / train_batches
+
+        print("Epoch {} result: \n".format(epoch))
+        print("Avg loss (train): {:.4f}\n".format(avg_loss))
+        print('-' * 10)
+
     elapsed_time = time.time() - since
     print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
 

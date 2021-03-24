@@ -77,5 +77,5 @@ criterion = nn.CrossEntropyLoss()
 optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
 
 vgg16 = train_model(dataloaders, vgg16, criterion, optimizer_ft, num_epochs=train_epochs)
-torch.save(vgg16.state_dict(), 'VGG16/VGG16_20_a1.pt')
+torch.save(vgg16.state_dict(), 'VGG16/VGG16_dataset.pt')
 

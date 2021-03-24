@@ -1,22 +1,22 @@
 from __future__ import print_function, division
-
 import torch
 import torch.nn as nn
-from torchvision import datasets, models, transforms
+import torch.optim as optim
+from torchvision import models, transforms
+from datasets import ImagePMSet
 import os
-from models import visualize_model, eval_model
+from models import train_model_re
 import yaml
 
-use_gpu = torch.cuda.is_available()
-if use_gpu:
-    print("Using CUDA")
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-with open(r'config\config.yaml') as file:
+with open('config/config.yaml') as file:
     config_list = yaml.load(file, Loader=yaml.FullLoader)
-    data_dir = config_list['nonsky_dir']
+    data_dir = config_list['nonsky_re_dir']
     train_fig = config_list['train']
     train_epochs = train_fig['epochs']
 
+# 训练测试字典 key
 TRAIN = 'train'
 VAL = 'val'
 
@@ -35,8 +35,8 @@ data_transforms = {
     ])
 }
 image_datasets = {
-    x: datasets.ImageFolder(
-        os.path.join(data_dir, x),
+    x: ImagePMSet(
+        os.path.join(data_dir, x), 
         transform=data_transforms[x]
     )
     for x in [TRAIN, VAL]
@@ -53,22 +53,26 @@ dataset_sizes = {x: len(image_datasets[x]) for x in [TRAIN, VAL]}
 for x in [TRAIN, VAL]:
     print("Loaded {} images under {}".format(dataset_sizes[x], x))
 
-print("Classes: ")
-class_names = image_datasets[TRAIN].classes
-print(image_datasets[TRAIN].classes)
 # Load the pretrained model from pytorch
-vgg16 = models.vgg16_bn()
+# vgg16 = models.vgg16_bn()
+vgg16 = models.vgg16_bn(pretrained=True)  # download 528M
+# vgg16.load_state_dict(torch.load("VGG16/vgg16_bn.pth"))
+
+for param in vgg16.features.parameters():
+    param.require_grad = False  # Freeze training for all layers
 
 # Newly created modules have require_grad=True by default
 num_features = vgg16.classifier[6].in_features
 features = list(vgg16.classifier.children())[:-1]  # Remove last layer
-features.extend([nn.Linear(num_features, len(class_names))])  # Add our layer with 3 outputs
+features.extend([nn.Linear(num_features, 1)])
 vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
-if use_gpu:
-    vgg16.load_state_dict(torch.load('VGG16/VGG16_20_a1_retrain.pt'))
-else:
-    vgg16.load_state_dict(torch.load('VGG16/VGG16_20_a1_retrain.pt', map_location=torch.device('cpu')))
+print(vgg16)
 
-criterion = nn.CrossEntropyLoss()
-eval_model(vgg16, criterion, dataloaders)
-# visualize_model(vgg16, dataloaders, num_images=32, class_names=class_names)
+vgg16.to(device)  # .cuda() will move everything to the GPU side
+    
+criterion = nn.MSELoss()  # 回归问题改用均方误差
+optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
+
+vgg16 = train_model_re(dataloaders, vgg16, criterion, optimizer_ft, num_epochs=train_epochs)
+torch.save(vgg16.state_dict(), 'VGG16/VGG16_dataset.pt')
+

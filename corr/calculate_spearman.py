@@ -18,7 +18,6 @@ sys.path.append('../')
 
 matplotlib.rcParams['font.sans-serif'] = ['Source Han Sans TW', 'sans-serif']
 
-
 # 9月26日无上午图片，10月26日无下午图片
 dataframe = pd.read_excel(r'..\excel\temp_all.xlsx')
 IQA_list = ['BIQME', 'FADE', 'AG', 'IE', '清晰度']
@@ -32,8 +31,8 @@ for IQA in IQA_list:
         am_pm = df_temp[df_temp['IMG_ID'].str.contains(angle)]
         am_pm = am_pm.sort_values(by=['IMG_ID'])
         # print(am_pm.head())
-        # am_pm.plot(x='IMG_ID', y='PM2.5')  # 按时间排序
-        # plt.show()
+        am_pm.plot(x='IMG_ID', y='PM2.5')  # 按时间排序
+        plt.show()
         arr = np.array(am_pm[[IQA, 'PM2.5']])
         corr, p_val = stats.spearmanr(arr)
         print('\tcorr=%f, p_val=%f' % (corr, p_val))

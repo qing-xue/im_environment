@@ -19,6 +19,8 @@ def add_to_path(dst_path, pollution):
         dst_path = os.path.join(dst_path, labels[1])
     elif PM25 <= pollution[labels[2]]:
         dst_path = os.path.join(dst_path, labels[2])
+    else:
+        dst_path = os.path.join(dst_path, labels[2])  # 剩余的也归入最后一类
     return dst_path
 
 
