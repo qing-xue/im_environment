@@ -15,6 +15,7 @@ with open('config/config.yaml') as file:
     data_dir = config_list['nonsky_re_dir']
     train_fig = config_list['train']
     train_epochs = train_fig['epochs']
+    train_pretrained = train_fig['pretrained']
 
 # 训练测试字典 key
 TRAIN = 'train'
@@ -55,11 +56,12 @@ for x in [TRAIN, VAL]:
 
 # Load the pretrained model from pytorch
 # vgg16 = models.vgg16_bn()
-vgg16 = models.vgg16_bn(pretrained=True)  # download 528M
+vgg16 = models.vgg16_bn(pretrained=train_pretrained)  # download 528M
 # vgg16.load_state_dict(torch.load("VGG16/vgg16_bn.pth"))
 
-for param in vgg16.features.parameters():
-    param.require_grad = False  # Freeze training for all layers
+if train_pretrained:
+    for param in vgg16.features.parameters():
+        param.require_grad = False  # Freeze training for all layers
 
 # Newly created modules have require_grad=True by default
 num_features = vgg16.classifier[6].in_features
