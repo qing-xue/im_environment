@@ -24,6 +24,7 @@ def eval_model_re(vgg, criterion, dataloader, imagePMSet, value2class):
     acc_test = 0
 
     test_batches = len(dataloader)
+    num_samples = len(dataloader.dataset)  # ugly
     print("Evaluating model")
     print('-' * 10)
 
@@ -34,6 +35,7 @@ def eval_model_re(vgg, criterion, dataloader, imagePMSet, value2class):
         vgg.train(False)
         vgg.eval()
         inputs, labels = data
+        labels = labels.view(len(labels), -1)
 
         with torch.no_grad():
             inputs, labels = inputs.to(device), labels.to(device)
@@ -49,8 +51,8 @@ def eval_model_re(vgg, criterion, dataloader, imagePMSet, value2class):
         del inputs, labels, outputs
         torch.cuda.empty_cache()
 
-    avg_loss = loss_test / test_batches
-    avg_acc = acc_test / test_batches
+    avg_loss = loss_test / num_samples
+    avg_acc = acc_test / num_samples
     elapsed_time = time.time() - since
     print("Evaluation completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
     print("Avg loss (test): {:.4f}".format(avg_loss))
@@ -61,22 +63,24 @@ def eval_model_re(vgg, criterion, dataloader, imagePMSet, value2class):
 def value2class(PMs, pollution={'L0':35, 'L1':70, 'L2':100}):
     for i, x in enumerate(PMs):
         if x <= pollution['L0']:
-            PMs[i] = pollution['L0']
+            PMs[i] = int(0)
         elif x <= pollution['L1']:
-            PMs[i] = pollution['L1']
+            PMs[i] = int(1)
         elif x <= pollution['L2']:
-            PMs[i] = pollution['L2']
+            PMs[i] = int(2)
         else:
-            PMs[i] = pollution['L2']  # 有剩余的也暂时归入最后一类
+            PMs[i] = int(2)  # 有剩余的也暂时归入最后一类
 
     return PMs
 
 
 with open(r'config\config.yaml') as file:
     config_list = yaml.load(file, Loader=yaml.FullLoader)
-    data_dir = config_list['nonsky_dir']
+    data_dir = config_list['nonsky_re_dir']
     train_fig = config_list['train']
     train_epochs = train_fig['epochs']
+    val_fig = config_list['val']
+    val_model = val_fig['model_re']
 
 TRAIN = 'train'
 VAL = 'val'
@@ -117,7 +121,7 @@ for x in [TRAIN, VAL]:
 # Load the pretrained model from pytorch
 vgg16 = models.vgg16_bn()
 vgg16 = vgg_customize(vgg16, 1)
-vgg16.load_state_dict(torch.load('VGG16/VGG16_20_a1_retrain.pt', map_location=device))
+vgg16.load_state_dict(torch.load(val_model, map_location=device))
 
 criterion = nn.MSELoss()
 eval_model_re(vgg16, criterion, dataloaders['val'], image_datasets['val'], value2class)

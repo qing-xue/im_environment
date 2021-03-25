@@ -7,11 +7,11 @@ import torch.nn as nn
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-def visualize_model(vgg, dataloaders, num_images=6, class_names=None):
+def visualize_model(vgg, dataloader, num_images=6, class_names=None):
     """预测结果可视化
 
     参数说明：
-        dataloaders: 载入测试数据 ['test'] or ['val']
+        dataloaders: 载入测试数据
     """
     was_training = vgg.training
     
@@ -21,7 +21,7 @@ def visualize_model(vgg, dataloaders, num_images=6, class_names=None):
     
     images_so_far = 0
 
-    for i, data in enumerate(dataloaders['val']):
+    for i, data in enumerate(dataloader):
         inputs, labels = data
         size = inputs.size()[0]
 
@@ -47,21 +47,22 @@ def visualize_model(vgg, dataloaders, num_images=6, class_names=None):
     vgg.train(mode=was_training)  # Revert model back to original training state
 
 
-def eval_model(vgg, criterion, dataloaders):
+def eval_model(vgg, criterion, dataloader):
     """在测试集上评估模型
 
     参数说明：
-        dataloaders: 载入测试数据 ['test'] or ['val']
+        dataloaders: 载入测试数据
     """
     since = time.time()
     loss_test = 0
     acc_test = 0
     
-    test_batches = len(dataloaders['train'])
+    test_batches = len(dataloader)
+    num_samples = len(dataloader.dataset)  # ugly
     print("Evaluating model")
     print('-' * 10)
     
-    for i, data in enumerate(dataloaders['train']):
+    for i, data in enumerate(dataloader):
         if i % 10 == 0:
             print("\rTest batch {}/{}".format(i, test_batches), end='', flush=True)
 
@@ -83,8 +84,8 @@ def eval_model(vgg, criterion, dataloaders):
         del inputs, labels, outputs, preds
         torch.cuda.empty_cache()
 
-    avg_loss = loss_test / test_batches
-    avg_acc = acc_test / test_batches
+    avg_loss = loss_test / num_samples
+    avg_acc = acc_test / num_samples
         
     elapsed_time = time.time() - since
     print("Evaluation completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
@@ -93,17 +94,17 @@ def eval_model(vgg, criterion, dataloaders):
     print('-' * 10)
 
 
-def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10):
+def train_model(dataloader, vgg, criterion, optimizer, num_epochs=10):
     """训练模型
 
     参数说明：
-        dataloaders: 载入训练、验证数据 ['train']
+        dataloaders: 载入训练
         vgg: 预训练模型
         criterion: 计算损失
         optimizer: 优化器
     """
     since = time.time()
-    train_batches = len(dataloaders['train'])
+    train_batches = len(dataloader)
     
     for epoch in range(num_epochs):
         print("Epoch {}/{}".format(epoch, num_epochs))
@@ -114,7 +115,7 @@ def train_model(dataloaders, vgg, criterion, optimizer, num_epochs=10):
         
         vgg.train(True)
                 
-        for i, data in enumerate(dataloaders['train']):
+        for i, data in enumerate(dataloader):
             if i % 10 == 0:
                 print("\rTraining batch {}/{}".format(i, train_batches), end='', flush=True)
                 

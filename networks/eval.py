@@ -14,6 +14,8 @@ with open(r'config\config.yaml') as file:
     data_dir = config_list['nonsky_dir']
     train_fig = config_list['train']
     train_epochs = train_fig['epochs']
+    val_fig = config_list['val']
+    val_model = val_fig['model']
 
 TRAIN = 'train'
 VAL = 'val'
@@ -63,8 +65,8 @@ features = list(vgg16.classifier.children())[:-1]  # Remove last layer
 features.extend([nn.Linear(num_features, len(class_names))])  # Add our layer with 3 outputs
 vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
 
-vgg16.load_state_dict(torch.load('VGG16/VGG16_20_a1_retrain.pt', map_location=device))
+vgg16.load_state_dict(torch.load(val_model, map_location=device))
 
 criterion = nn.CrossEntropyLoss()
-eval_model(vgg16, criterion, dataloaders)
+eval_model(vgg16, criterion, dataloaders['val'])
 # visualize_model(vgg16, dataloaders, num_images=32, class_names=class_names)

@@ -23,6 +23,7 @@ def train_model_re(dataloader, vgg, criterion, optimizer, num_epochs=10):
     """
     since = time.time()
     train_batches = len(dataloader)
+    num_samples = len(dataloader.dataset)  # ugly
 
     for epoch in range(num_epochs):
         print("Epoch {}/{}".format(epoch, num_epochs))
@@ -50,7 +51,7 @@ def train_model_re(dataloader, vgg, criterion, optimizer, num_epochs=10):
             del inputs, labels, outputs
             torch.cuda.empty_cache()
 
-        avg_loss = loss_train / train_batches
+        avg_loss = loss_train / num_samples
         print("Epoch {} result: ".format(epoch))
         print("Avg loss (train): {:.4f}".format(avg_loss))
         print('-' * 10)
@@ -119,5 +120,5 @@ criterion = nn.MSELoss()  # 回归问题改用均方误差
 optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
 
 vgg16 = train_model_re(dataloaders['train'], vgg16, criterion, optimizer_ft, num_epochs=train_epochs)
-torch.save(vgg16.state_dict(), 'VGG16/VGG16_dataset_re.pt')
+torch.save(vgg16.state_dict(), 'VGG16/VGG16_30_a1_re.pt')
 
