@@ -2,9 +2,9 @@
 nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256_a1\non_sky
 #nonsky_dir: ../../Heshan_imgset/256x256_a1/non_sky
 
-nonsky_re_dir: D:\workplace\dataset\Heshan_imgset\256x256_a1\non_sky_re
-#nonsky_re_dir: ../../Heshan_imgset/256x256_a1/non_sky_re
+#nonsky_re_dir: D:\workplace\dataset\Heshan_imgset\256x256_a1\non_sky_re
+nonsky_re_dir: ../../Heshan_imgset/256x256_a1/non_sky_re
 
 train:
-  epochs: 20
+  epochs: 30
   pretrained: True

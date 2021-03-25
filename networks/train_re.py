@@ -119,5 +119,5 @@ criterion = nn.MSELoss()  # 回归问题改用均方误差
 optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
 
 vgg16 = train_model_re(dataloaders['train'], vgg16, criterion, optimizer_ft, num_epochs=train_epochs)
-torch.save(vgg16.state_dict(), 'VGG16/VGG16_dataset.pt')
+torch.save(vgg16.state_dict(), 'VGG16/VGG16_dataset_re.pt')
 
