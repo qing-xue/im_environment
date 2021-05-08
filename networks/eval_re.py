@@ -124,4 +124,4 @@ vgg16 = vgg_customize(vgg16, 1)
 vgg16.load_state_dict(torch.load(val_model, map_location=device))
 
 criterion = nn.MSELoss()
-eval_model_re(vgg16, criterion, dataloaders['val'], image_datasets['val'], value2class)
+eval_model_re(vgg16, criterion, dataloaders['train'], image_datasets['train'], value2class)
