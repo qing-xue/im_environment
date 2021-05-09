@@ -1,3 +1,11 @@
+# 20-05-09 Test Resnet, 三分类模型
+Training:Epoch[000/100] Iteration[060/622] Loss: 0.8149 Acc:50.83%
+Training:Epoch[000/100] Iteration[070/622] Loss: 0.7927 Acc:51.88%
+...
+Training:Epoch[006/100] Iteration[190/622] Loss: 0.5552 Acc:65.59%
+Training:Epoch[006/100] Iteration[200/622] Loss: 0.7404 Acc:65.50%
+Training:Epoch[006/100] Iteration[210/622] Loss: 0.7220 Acc:65.27%
+
 # 仅采用角度1的图片
 
 * 是否使用预训练模型

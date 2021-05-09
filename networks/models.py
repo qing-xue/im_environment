@@ -3,6 +3,7 @@ from torch.autograd import Variable
 import time
 import utils
 import torch.nn as nn
+import torchvision.models as models
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -47,115 +48,7 @@ def visualize_model(vgg, dataloader, num_images=6, class_names=None):
     vgg.train(mode=was_training)  # Revert model back to original training state
 
 
-def eval_model(vgg, criterion, dataloader):
-    """在测试集上评估模型
-
-    参数说明：
-        dataloaders: 载入测试数据
-    """
-    since = time.time()
-    loss_test = 0
-    acc_test = 0
-    
-    test_batches = len(dataloader)
-    num_samples = len(dataloader.dataset)  # ugly
-    print("Evaluating model")
-    print('-' * 10)
-    
-    for i, data in enumerate(dataloader):
-        if i % 10 == 0:
-            print("\rTest batch {}/{}".format(i, test_batches), end='', flush=True)
-
-        vgg.train(False)
-        vgg.eval()
-        inputs, labels = data
-
-        with torch.no_grad():
-            inputs, labels = inputs.to(device), labels.to(device)
-
-        outputs = vgg(inputs)
-
-        _, preds = torch.max(outputs.data, 1)
-        loss = criterion(outputs, labels)
-
-        loss_test += loss.data  # data[0] for GPU?
-        acc_test += torch.sum(preds == labels.data)
-
-        del inputs, labels, outputs, preds
-        torch.cuda.empty_cache()
-
-    avg_loss = loss_test / num_samples
-    avg_acc = acc_test / num_samples
-        
-    elapsed_time = time.time() - since
-    print("Evaluation completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
-    print("Avg loss (test): {:.4f}".format(avg_loss))
-    print("Avg acc (test): {:.4f}".format(avg_acc))
-    print('-' * 10)
-
-
-def train_model(dataloader, vgg, criterion, optimizer, num_epochs=10):
-    """训练模型
-
-    参数说明：
-        dataloaders: 载入训练
-        vgg: 预训练模型
-        criterion: 计算损失
-        optimizer: 优化器
-    """
-    since = time.time()
-    train_batches = len(dataloader)
-    
-    for epoch in range(num_epochs):
-        print("Epoch {}/{}".format(epoch, num_epochs))
-        print('-' * 10)
-        
-        loss_train = 0
-        acc_train = 0
-        
-        vgg.train(True)
-                
-        for i, data in enumerate(dataloader):
-            if i % 10 == 0:
-                print("\rTraining batch {}/{}".format(i, train_batches), end='', flush=True)
-                
-            inputs, labels = data
-            
-            # if use_gpu:
-            #     inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
-            # else:
-            inputs, labels = Variable(inputs.to(device)), Variable(labels.to(device))
-            
-            optimizer.zero_grad()     
-            outputs = vgg(inputs)
-            
-            _, preds = torch.max(outputs.data, 1)
-            loss = criterion(outputs, labels)
-            
-            loss.backward()
-            optimizer.step()
-            
-            loss_train += loss.data  # data[0] for GPU?
-            acc_train += torch.sum(preds == labels.data)
-            
-            del inputs, labels, outputs, preds
-            torch.cuda.empty_cache()
-
-        avg_loss = loss_train / train_batches
-        avg_acc = acc_train / train_batches
-
-        print("Epoch {} result: ".format(epoch))
-        print("Avg loss (train): {:.4f}".format(avg_loss))
-        print("Avg acc (train): {:.4f}".format(avg_acc))
-        print('-' * 10)
-        
-    elapsed_time = time.time() - since
-    print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
-
-    return vgg
-
-
-def vgg_customize(vgg16, out):
+def vgg16_customize(vgg16, out):
     """替换 vgg 网络最后一层的输出向量
 
     Params:
@@ -168,3 +61,17 @@ def vgg_customize(vgg16, out):
 
     print(vgg16)
     return vgg16
+
+
+def resnet34_custom(out, pretrained=True):
+    """ 自定义 ResNet 最后一层的输出数目 """
+    net = models.resnet34(pretrained)
+    num_ftrs = net.fc.in_features
+    net.fc = nn.Linear(num_ftrs, out)
+
+    return net
+
+
+if __name__ == '__main__':
+    net = resnet34_custom(3)
+    print(net)

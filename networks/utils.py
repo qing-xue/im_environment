@@ -26,6 +26,7 @@ def show_databatch(inputs, classes, class_names=None):
     imshow(out, title=[class_names[x] for x in classes])
 
 
-# # Get a batch of training data
-# inputs, classes = next(iter(dataloaders[TRAIN]))
-# utils.show_databatch(inputs, classes, class_names)
+if __name__ = '__main__':
+    # Get a batch of training data
+    inputs, classes = next(iter(dataloaders[TRAIN]))
+    utils.show_databatch(inputs, classes, class_names)
