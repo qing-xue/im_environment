@@ -1,7 +1,33 @@
 import os
 import matplotlib.pyplot as plt
 import torchvision
+import torch
+import numpy as np
+import random
 plt.ion()  
+
+
+def value2class(PMs, pollution={'L0':35, 'L1':70, 'L2':100}):
+    for i, x in enumerate(PMs):
+        if x <= pollution['L0']:
+            PMs[i] = int(0)
+        elif x <= pollution['L1']:
+            PMs[i] = int(1)
+        elif x <= pollution['L2']:
+            PMs[i] = int(2)
+        else:
+            PMs[i] = int(2)  # 有剩余的也暂时归入最后一类
+
+    return PMs
+
+
+def set_seed(seed):
+    """ 需探究这里的 torch, numpy 是否与其他文件一致？ """
+    torch.manual_seed(seed)       # cpu 
+    torch.cuda.manual_seed(seed) 
+    torch.backends.cudnn.deterministic = True  
+    np.random.seed(seed) 
+    random.seed(seed)     
 
 
 def mkdir(floder):
@@ -26,7 +52,5 @@ def show_databatch(inputs, classes, class_names=None):
     imshow(out, title=[class_names[x] for x in classes])
 
 
-if __name__ = '__main__':
-    # Get a batch of training data
-    inputs, classes = next(iter(dataloaders[TRAIN]))
-    utils.show_databatch(inputs, classes, class_names)
+if __name__ == '__main__':
+    set_seed(1)

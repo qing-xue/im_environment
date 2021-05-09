@@ -4,16 +4,19 @@ from PIL import Image
 import torch
 import torch.utils.data as data
 import re
+import glob
 
 
 class ImagePMSet(data.Dataset):
     def __init__(self, root, transform):
-        imgs = os.listdir(root)
+        paths_mask = root + '/*/*.bmp'
+        img_paths = glob.glob(paths_mask)
+
         self.imgs, self.PMs = [], []
         self.transforms = transform
 
-        for k in imgs:
-            self.imgs.append(os.path.join(root, k))
+        for k in img_paths:
+            self.imgs.append(k)
             PM25 = int(re.split('[-.]', k)[-2])
             self.PMs.append(PM25)
 

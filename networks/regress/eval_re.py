@@ -60,20 +60,6 @@ def eval_model_re(vgg, criterion, dataloader, imagePMSet, value2class):
     print('-' * 10)
 
 
-def value2class(PMs, pollution={'L0':35, 'L1':70, 'L2':100}):
-    for i, x in enumerate(PMs):
-        if x <= pollution['L0']:
-            PMs[i] = int(0)
-        elif x <= pollution['L1']:
-            PMs[i] = int(1)
-        elif x <= pollution['L2']:
-            PMs[i] = int(2)
-        else:
-            PMs[i] = int(2)  # 有剩余的也暂时归入最后一类
-
-    return PMs
-
-
 with open(r'config\config.yaml') as file:
     config_list = yaml.load(file, Loader=yaml.FullLoader)
     data_dir = config_list['nonsky_re_dir']
