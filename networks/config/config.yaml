@@ -1,13 +1,11 @@
 nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
-#nonsky_dir: ../../Heshan_imgset/256x256_a1/non_sky
-
-nonsky_re_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky_re
-#nonsky_re_dir: ../../Heshan_imgset/256x256_a1/non_sky_re
+#nonsky_dir: ../../Heshan_imgset/256x256/non_sky
 
 train:
   epochs: 30
   pretrained: True
+  batch: 16
+  imgsize: 224
 
 val:
   model: VGG16/VGG16_100.pt
-  model_re: VGG16/VGG16_30_a1_re.pt

@@ -6,12 +6,13 @@ import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 import torch.optim as optim
 import time
+import yaml
 
 import sys
 from pathlib import Path
 current_folder = Path(__file__).absolute().parent  # ugly
 father_folder = str(current_folder.parent)
-sys.path.append(father_folder)
+sys.path.insert(0, father_folder)
 
 from utils import set_seed, value2class
 from datasets import ImagePMSet
@@ -19,13 +20,20 @@ from models import resnet34_custom
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+with open('networks/config/config.yaml') as file:
+    config_list = yaml.load(file, Loader=yaml.FullLoader)
+    data_dir = config_list['nonsky_dir']
+    train_fig = config_list['train']
+    train_epochs = train_fig['epochs']
+    train_pretrained = train_fig['pretrained']
+    train_batch = train_fig['batch']
+    train_imgsize = train_fig['imgsize']
+
 # set parameters 超参数可以根据自己需要调
-MAX_EPOCH = 10
-BATCH_SIZE = 16
 LR = 0.0005
-log_interval = 10
+log_interval = 10   # 每个 epoch 中输出日志间隔
 val_interval = 1
-classes = 1  # 回归输出一个标量
+classes = 1         # 回归输出一个标量
 start_epoch = -1
 lr_decay_step = 7
 
@@ -37,18 +45,19 @@ def train(model, data_loader, criterion, optimizer, imagePMSet):
     # start training
     time_start=time.time()
     train_curve = list()
+    valid_curve = list()
     iter_count = 0
 
     # construct SummaryWriter
     writer = SummaryWriter(comment='test_your_comment', filename_suffix="_test_your_filename_suffix")
-
-    for epoch in range(start_epoch + 1, MAX_EPOCH):
+    train_loader = data_loader['train']
+    for epoch in range(start_epoch + 1, train_epochs):
         loss_mean = 0.
         correct = 0.
         total = 0.
 
         model.train()
-        for i, data in enumerate(data_loader):
+        for i, data in enumerate(train_loader):
 
             iter_count += 1
 
@@ -78,10 +87,10 @@ def train(model, data_loader, criterion, optimizer, imagePMSet):
             train_curve.append(loss.item())
             if (i+1) % log_interval == 0:
                 loss_mean = loss_mean / log_interval
-                print("Training:Epoch[{:0>3}/{:0>3}] Iteration[{:0>3}/{:0>3}] \
-                    Loss: {:.4f} \ Acc:{:.2%}".format(
-                        epoch, MAX_EPOCH, i+1, len(data_loader), 
-                        loss_mean, correct / total))
+                print("Training:Epoch[{:0>3}/{:0>3}] Iteration[{:0>3}/{:0>3}]" \
+                    " Loss: {:.4f} Acc:{:.2%}".format(
+                        epoch, train_epochs, i+1, len(train_loader), loss_mean, correct / total))
+
                 loss_mean = 0.
 
             # log the data, save to "event file"
@@ -90,35 +99,62 @@ def train(model, data_loader, criterion, optimizer, imagePMSet):
 
         scheduler.step()  # update learning rate
 
-    time_end=time.time()
-    print('totally cost', time_end-time_start)
+        # validate the model
+        valid_loader = data_loader['val']
+        if (epoch+1) % val_interval == 0:
+
+            correct_val = 0.
+            total_val = 0.
+            loss_val = 0.
+
+            model.eval()
+            with torch.no_grad():
+                for j, data in enumerate(valid_loader):
+                    inputs, labels = data
+                    labels = labels.view(len(labels), -1)
+                    inputs, labels = inputs.to(device), labels.to(device)
+
+                    outputs = model(inputs)
+                    loss = criterion(outputs, labels)
+
+                    total_val += labels.size(0)
+                    outputs, labels = map(imagePMSet.inverse_PM, (outputs, labels))
+                    outputs, labels = map(value2class, (outputs, labels))
+                    correct_val += torch.sum(outputs == labels).item()
+
+                    loss_val += loss.item()
+
+                loss_val_mean = loss_val / len(valid_loader)  # 除以批次数目
+                valid_curve.append(loss_val_mean)
+                print("Valid:   Epoch[{:0>3}/{:0>3}] Iteration[{:0>3}/{:0>3}]" \
+                    " Loss: {:.4f} Acc:{:.2%}".format(
+                        epoch, train_epochs, j+1, len(valid_loader), loss_val_mean, correct_val / total_val))
+
+                # log the data, save to "event file"
+                writer.add_scalars("Loss", {"Valid": loss_val_mean}, iter_count)
+                writer.add_scalars("Accuracy", {"Valid": correct_val / total_val}, iter_count)
+
+    time_end = time.time()
+    print('totally time cost {:.2f} s'.format(time_end - time_start))
 
 
-def mainFunc(data_dir, imgsize):
-    """
-    函数入口参数：
-        data_dir 图片数据集
-        imgsize 输入图片尺寸（Eg:图片尺寸为128*128时，imgsize=128）
-    """
-    if not os.path.exists(data_dir):
-        raise Exception("\n{} not exists".format(data_dir))
-
+def mainFunc():
     set_seed(1)  # set random seed
 
     train_dir = os.path.join(data_dir, "train")
     valid_dir = os.path.join(data_dir, "val")
 
-    norm_mean = [0.485, 0.456, 0.406]  # from Imagenet
+    norm_mean = [0.485, 0.456, 0.406]  # from ImageNet
     norm_std = [0.229, 0.224, 0.225]
 
     train_transform = transforms.Compose([
-        transforms.Resize(imgsize),
+        transforms.Resize(train_imgsize),
         transforms.ToTensor(),
         transforms.Normalize(norm_mean, norm_std),
     ])
 
     valid_transform = transforms.Compose([
-        transforms.Resize(imgsize),
+        transforms.Resize(train_imgsize),
         transforms.ToTensor(),
         transforms.Normalize(norm_mean, norm_std),
     ])
@@ -126,8 +162,9 @@ def mainFunc(data_dir, imgsize):
     # construct dataset, DataLoder
     train_data = ImagePMSet(root=train_dir, transform=train_transform)
     valid_data = ImagePMSet(root=valid_dir, transform=valid_transform)
-    train_loader = DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffle=True)
-    valid_loader = DataLoader(dataset=valid_data, batch_size=BATCH_SIZE)
+    train_loader = DataLoader(dataset=train_data, batch_size=train_batch, shuffle=True)
+    valid_loader = DataLoader(dataset=valid_data, batch_size=train_batch)
+    data_loaders = {'train': train_loader, 'val': valid_loader}
 
     # construct model
     resnet34_ft = resnet34_custom(classes, pretrained=True)
@@ -141,12 +178,11 @@ def mainFunc(data_dir, imgsize):
         {'params': resnet34_ft.fc.parameters(), 'lr': LR}], 
         momentum=0.9)
 
-    train(resnet34_ft, train_loader, criterion, optimizer, train_data)
+    train(resnet34_ft, data_loaders, criterion, optimizer, train_data)
     
 
 if __name__ == "__main__":
-    data_dir = r'F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky'
-    mainFunc(data_dir, imgsize=128)
+    mainFunc()
 
 
 

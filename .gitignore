@@ -1,6 +1,6 @@
 *.xlsx
 excel/
-networks/VGG16/
+data/VGG16/
 .idea/
 *.pth
 networks/Resnet/runs/
