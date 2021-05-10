@@ -3,11 +3,29 @@ import numpy as np
 from PIL import Image
 import torch
 import torch.utils.data as data
+import torchvision.transforms as transforms
 import re
 import glob
 
+# image normalization from ImageNet
+norm_mean = [0.485, 0.456, 0.406]  
+norm_std  = [0.229, 0.224, 0.225]
+
+
+def get_transform(imgsize, first='Resize'):
+    if first == 'Resize':
+        first = transforms.Resize(imgsize)  # 传函数句柄
+    elif first == 'RandomResizedCrop':
+        first = transforms.RandomResizedCrop(imgsize) 
+    transform = transforms.Compose([
+        first,  # RandomResizedCrop
+        transforms.ToTensor(),
+        transforms.Normalize(norm_mean, norm_std),
+    ])
+
 
 class ImagePMSet(data.Dataset):
+    """ 用于回归模型，PM2.5 做标准化 """
     def __init__(self, root, transform):
         paths_mask = root + '/*/*.bmp'
         img_paths = glob.glob(paths_mask)

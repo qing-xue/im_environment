@@ -15,8 +15,9 @@ father_folder = str(current_folder.parent)
 sys.path.insert(0, father_folder)
 
 from utils import set_seed, value2class
-from datasets import ImagePMSet
+from datasets import ImagePMSet, get_transform
 from models import resnet34_custom
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -51,6 +52,7 @@ def train(model, data_loader, criterion, optimizer, imagePMSet):
     # construct SummaryWriter
     writer = SummaryWriter(comment='test_your_comment', filename_suffix="_test_your_filename_suffix")
     train_loader = data_loader['train']
+    model.to(device)
     for epoch in range(start_epoch + 1, train_epochs):
         loss_mean = 0.
         correct = 0.
@@ -144,20 +146,8 @@ def mainFunc():
     train_dir = os.path.join(data_dir, "train")
     valid_dir = os.path.join(data_dir, "val")
 
-    norm_mean = [0.485, 0.456, 0.406]  # from ImageNet
-    norm_std = [0.229, 0.224, 0.225]
-
-    train_transform = transforms.Compose([
-        transforms.Resize(train_imgsize),
-        transforms.ToTensor(),
-        transforms.Normalize(norm_mean, norm_std),
-    ])
-
-    valid_transform = transforms.Compose([
-        transforms.Resize(train_imgsize),
-        transforms.ToTensor(),
-        transforms.Normalize(norm_mean, norm_std),
-    ])
+    train_transform = get_transform(train_imgsize, 'Resize')
+    valid_transform = get_transform(train_imgsize, 'Resize')
 
     # construct dataset, DataLoder
     train_data = ImagePMSet(root=train_dir, transform=train_transform)
@@ -168,7 +158,6 @@ def mainFunc():
 
     # construct model
     resnet34_ft = resnet34_custom(classes, pretrained=True)
-    resnet34_ft.to(device)
     criterion = nn.MSELoss() 
 
     fc_params_id = list(map(id, resnet34_ft.fc.parameters()))
