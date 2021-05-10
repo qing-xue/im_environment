@@ -1,5 +1,6 @@
-nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
-#nonsky_dir: ../../Heshan_imgset/256x256/non_sky
+# nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
+nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
+# nonsky_dir: ../../Heshan_imgset/256x256/non_sky
 
 train:
   epochs: 30
@@ -8,4 +9,6 @@ train:
   imgsize: 224
 
 val:
-  model: VGG16/VGG16_100.pt
+  imgsize: 224
+  batch: 16
+  model: data/pth/vgg16_bn.pth
