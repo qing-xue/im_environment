@@ -33,7 +33,7 @@ with open('networks/config/config.yaml') as file:
 LR = 0.0005
 log_interval = 10   # 每个 epoch 中输出日志间隔
 val_interval = 1
-classes = 1         # 回归输出一个标量
+classes = 1          # 回归输出一个标量
 start_epoch = -1
 lr_decay_step = 7
 
@@ -52,6 +52,9 @@ def train(model, data_loader, criterion, optimizer, imagePMSet):
     writer = SummaryWriter(comment='test_your_comment', filename_suffix="_test_your_filename_suffix")
     train_loader = data_loader['train']
     for epoch in range(start_epoch + 1, train_epochs):
+        if epoch > 1:
+            break
+
         loss_mean = 0.
         correct = 0.
         total = 0.
@@ -134,8 +137,10 @@ def train(model, data_loader, criterion, optimizer, imagePMSet):
                 writer.add_scalars("Loss", {"Valid": loss_val_mean}, iter_count)
                 writer.add_scalars("Accuracy", {"Valid": correct_val / total_val}, iter_count)
 
+    writer.close()
     time_end = time.time()
     print('totally time cost {:.2f} s'.format(time_end - time_start))
+    return model
 
 
 def mainFunc():
@@ -178,7 +183,8 @@ def mainFunc():
         {'params': resnet34_ft.fc.parameters(), 'lr': LR}], 
         momentum=0.9)
 
-    train(resnet34_ft, data_loaders, criterion, optimizer, train_data)
+    model = train(resnet34_ft, data_loaders, criterion, optimizer, train_data)
+    torch.save(model.state_dict(), 'data/Resnet/resnet_re.pt')
     
 
 if __name__ == "__main__":
