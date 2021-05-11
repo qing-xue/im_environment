@@ -7,6 +7,18 @@ import random
 plt.ion()  
 
 
+def inverse_PM(PMs, PM_mean=45, PM_std=0.5):
+    return PMs * PM_std + PM_mean
+
+
+def im_segment(input_):
+    """ 截取图像中非天空区域 """
+    w, h = input_.size
+    box = (0, h * 2 // 3, w, h)  # 暂时粗略截
+    input_ = input_.crop(box)   
+    return input_
+
+
 def value2class(PMs, pollution={'L0':35, 'L1':70, 'L2':100}):
     for i, x in enumerate(PMs):
         if x <= pollution['L0']:

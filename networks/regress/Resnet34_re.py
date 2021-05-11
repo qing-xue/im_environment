@@ -14,8 +14,6 @@ current_folder = Path(__file__).absolute().parent  # ugly
 father_folder = str(current_folder.parent)
 sys.path.insert(0, father_folder)
 
-# print(sys.path)
-# # from . import eval_re
 from utils import set_seed, value2class
 from datasets import ImagePMSet, get_transform
 from models import resnet34_custom

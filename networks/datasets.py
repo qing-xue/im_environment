@@ -16,12 +16,17 @@ def get_transform(imgsize, first='Resize'):
     if first == 'Resize':
         first = transforms.Resize(imgsize)  # 传函数句柄
     elif first == 'RandomResizedCrop':
-        first = transforms.RandomResizedCrop(imgsize) 
+        first = transforms.RandomResizedCrop(imgsize)
+    elif first == 'RandomCrop':
+        first = transforms.RandomCrop(imgsize)
+
     transform = transforms.Compose([
-        first,  # RandomResizedCrop
+        first, 
         transforms.ToTensor(),
         transforms.Normalize(norm_mean, norm_std),
     ])
+    
+    return transform
 
 
 class ImagePMSet(data.Dataset):
