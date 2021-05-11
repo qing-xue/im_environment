@@ -1,18 +1,31 @@
+---
+project: im_invironment
+experiment_desc: 'experiment1'
+
 # nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
 # nonsky_dir: ../../Heshan_imgset/256x256/non_sky
 
 train:
-  epochs: 30
   pretrained: True
-  batch: 16
-  imgsize: 224
 
 val:
-  imgsize: 224
-  batch: 16
   model: data/pth/vgg16_bn.pth
 
 data_split:
   split_date: 1107
-  split_back: True
+  split_back: False
+
+model:
+  g_name: resnet34
+  out_features: 1
+
+num_epochs: 3
+train_batches_per_epoch: 100
+val_batches_per_epoch: 10
+batch_size: 16
+image_size: [224, 224]
+
+optimizer:
+  name: sgd
+  lr: 0.0001

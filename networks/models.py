@@ -63,15 +63,6 @@ def vgg16_customize(vgg16, out):
     return vgg16
 
 
-def resnet34_custom(out, pretrained=True):
-    """ 自定义 ResNet 最后一层的输出数目 """
-    net = models.resnet34(pretrained)
-    num_ftrs = net.fc.in_features
-    net.fc = nn.Linear(num_ftrs, out)
-
-    return net
-
-
 if __name__ == '__main__':
     net = resnet34_custom(3)
     print(net)

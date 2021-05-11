@@ -1,11 +1,11 @@
 *.xlsx
 excel/
-data/VGG16/
+data/
 .idea/
 *.pth
 networks/Resnet/runs/
 runs/
-data/pth/
+*.h5
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

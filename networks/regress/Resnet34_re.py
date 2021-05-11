@@ -14,7 +14,7 @@ current_folder = Path(__file__).absolute().parent  # ugly
 father_folder = str(current_folder.parent)
 sys.path.insert(0, father_folder)
 
-from utils import set_seed, value2class
+from utils import set_seed, value2class, mkdir
 from datasets import ImagePMSet, get_transform
 from models import resnet34_custom
 
@@ -63,6 +63,8 @@ def train(model, data_loader, criterion, optimizer, imagePMSet):
 
         model.train()
         for i, data in enumerate(train_loader):
+            if i > 10:
+                break
 
             iter_count += 1
 
@@ -115,9 +117,12 @@ def train(model, data_loader, criterion, optimizer, imagePMSet):
             model.eval()
             with torch.no_grad():
                 for j, data in enumerate(valid_loader):
+                    if j > 10:
+                        break
                     inputs, labels = data
                     labels = labels.view(len(labels), -1)
                     inputs, labels = inputs.to(device), labels.to(device)
+                    labels = labels.float()
 
                     outputs = model(inputs)
                     loss = criterion(outputs, labels)
@@ -173,7 +178,9 @@ def mainFunc():
         momentum=0.9)
 
     model = train(resnet34_ft, data_loaders, criterion, optimizer, train_data)
-    torch.save(model.state_dict(), 'data/Resnet/resnet_re.pt')
+    save_path = 'data/Resnet'
+    mkdir(save_path)
+    torch.save(model.state_dict(), save_path + '/resnet_re.pt')
     
 
 if __name__ == "__main__":
