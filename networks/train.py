@@ -46,7 +46,6 @@ class Trainer:
             self._run_epoch(epoch)
             self._validate(epoch)
 
-            # PSNR bug!
             if self.metric_counter.update_best_model(): 
                 torch.save({
                     'model': self.model.state_dict()
@@ -55,7 +54,6 @@ class Trainer:
                 'model': self.model.state_dict()
             }, 'last_{}.h5'.format(self.config['experiment_desc']))
 
-            # loss message bug!
             print(self.metric_counter.loss_message())
             logging.debug("Experiment Name: %s, Epoch: %d, Loss: %s" % (
                 self.config['experiment_desc'], epoch, self.metric_counter.loss_message()))
@@ -69,9 +67,6 @@ class Trainer:
         tq = tqdm.tqdm(self.train_dataset, total=epoch_size)
         tq.set_description('Epoch {}, lr {}'.format(epoch, lr))
         i = 0
-        loss_mean = 0.
-        correct = 0.
-        total = 0.
         for data in tq:
             # 抽象一层 model 管理 networks
             # inputs, targets = self.model.get_input(data)
@@ -86,13 +81,14 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
-            total += labels.size(0)
             outputs, labels = map(inverse_PM, (outputs, labels))
             outputs, labels = map(value2class, (outputs, labels))
-            correct += torch.sum(outputs == labels).item()
+            # correct = torch.sum(outputs == labels).item()
+            correct = (outputs == labels).data  # 向量中1的
 
-            self.metric_counter.add_losses(loss.item(), loss.item(), 0.1)
-            self.metric_counter.add_metrics(correct, correct)
+            self.metric_counter.add_losses(loss.item())
+            self.metric_counter.add_metrics(correct)  #?? correct 和 loss 的计算都有问题
+            # metric_counter 内求平均值
             tq.set_postfix(loss=self.metric_counter.loss_message())
            
             i += 1
@@ -107,9 +103,6 @@ class Trainer:
         tq = tqdm.tqdm(self.val_dataset, total=epoch_size)
         tq.set_description('Validation')
         i = 0
-        loss_mean = 0.
-        correct = 0.
-        total = 0.
         for data in tq:
             inputs, labels = data
             labels = labels.view(len(labels), -1)
@@ -118,13 +111,14 @@ class Trainer:
             labels = labels.float()
 
             loss = self.criterion(outputs, labels)
-            total += labels.size(0)
             outputs, labels = map(inverse_PM, (outputs, labels))
             outputs, labels = map(value2class, (outputs, labels))
-            correct += torch.sum(outputs == labels).item()
+            correct = torch.sum(outputs == labels).item()
 
-            self.metric_counter.add_losses(loss.item(), loss.item(), 0.1)
-            self.metric_counter.add_metrics(correct, correct)
+            self.metric_counter.add_losses(loss.item())
+            self.metric_counter.add_metrics(correct)
+            # metric_counter 内求平均值
+            tq.set_postfix(loss=self.metric_counter.loss_message())
 
             i += 1
             if i > epoch_size:

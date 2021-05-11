@@ -22,23 +22,24 @@ class MetricCounter:
         self.metrics = defaultdict(list)
         self.images = defaultdict(list)
 
-    def add_losses(self, l_G, l_content, l_D=0):
-        for name, value in zip(('G_loss', 'G_loss_content', 'G_loss_adv', 'D_loss'),
-                               (l_G, l_content, l_G - l_content, l_D)):
+    def add_losses(self, l_mse):
+        for name, value in zip(('MSE_loss',),
+                               (l_mse,)):
             self.metrics[name].append(value)
 
-    def add_metrics(self, psnr, ssim):
-        for name, value in zip(('PSNR', 'SSIM'),
-                               (psnr, ssim)):
+    def add_metrics(self, acc):
+        for name, value in zip(('Acc',),
+                               (acc,)):
             self.metrics[name].append(value)
 
     def loss_message(self):
-        metrics = ((k, np.mean(self.metrics[k][-WINDOW_SIZE:])) for k in ('G_loss', 'PSNR', 'SSIM'))
+        # ('MSE_loss',) 可设置为私有变量，为何作者不输出 Acc？
+        metrics = ((k, np.mean(self.metrics[k][-WINDOW_SIZE:])) for k in ('MSE_loss', 'Acc'))
         return '; '.join(map(lambda x: f'{x[0]}={x[1]:.4f}', metrics))
 
     def write_to_tensorboard(self, epoch_num, validation=False):
         scalar_prefix = 'Validation' if validation else 'Train'
-        for tag in ('G_loss', 'D_loss', 'G_loss_adv', 'G_loss_content', 'SSIM', 'PSNR'):
+        for tag in ('MSE_loss', 'Acc'):
             self.writer.add_scalar(f'{scalar_prefix}_{tag}', np.mean(self.metrics[tag]), global_step=epoch_num)
         for tag in self.images:
             imgs = self.images[tag]
@@ -49,7 +50,7 @@ class MetricCounter:
                 self.images[tag] = []
 
     def update_best_model(self):
-        cur_metric = np.mean(self.metrics['PSNR'])
+        cur_metric = np.mean(self.metrics['Acc'])
         if self.best_metric < cur_metric:
             self.best_metric = cur_metric
             return True

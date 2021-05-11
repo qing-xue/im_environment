@@ -21,7 +21,7 @@ model:
   out_features: 1
 
 num_epochs: 3
-train_batches_per_epoch: 100
+train_batches_per_epoch: 10
 val_batches_per_epoch: 10
 batch_size: 16
 image_size: [224, 224]
