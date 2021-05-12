@@ -4,7 +4,7 @@ from collections import defaultdict
 import numpy as np
 from tensorboardX import SummaryWriter
 
-WINDOW_SIZE = 100
+WINDOW_SIZE = 100  # 只计算最近的对应 batch 数目的指标的平均值
 
 
 class MetricCounter:

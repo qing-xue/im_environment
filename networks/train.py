@@ -1,7 +1,7 @@
 import os
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 import torch.optim as optim
@@ -22,16 +22,7 @@ from networks import get_nets
 from metric_counter import MetricCounter
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# 此处需继续优化
-with open('networks/config/config.yaml', 'r') as file:
-    config_list = yaml.load(file, Loader=yaml.FullLoader)
-    data_dir = config_list['nonsky_dir']
-    train_fig = config_list['train']
-    train_pretrained = train_fig['pretrained']
-    train_batch = config_list['batch_size']
-    train_imgsize = config_list['image_size']
-
+set_seed(1)  # set different random seed
 
 class Trainer:
     def __init__(self, config, train: DataLoader, val: DataLoader):
@@ -44,87 +35,53 @@ class Trainer:
         self._init_params()
         for epoch in range(0, self.config['num_epochs']):
             self._run_epoch(epoch)
-            self._validate(epoch)
+            self._run_epoch(epoch, valid=True)
 
             if self.metric_counter.update_best_model(): 
                 torch.save({
                     'model': self.model.state_dict()
-                }, 'best_{}.h5'.format(self.config['experiment_desc']))
+                }, 'data/best_{}.h5'.format(self.config['experiment_desc']))
             torch.save({
                 'model': self.model.state_dict()
-            }, 'last_{}.h5'.format(self.config['experiment_desc']))
+            }, 'data/last_{}.h5'.format(self.config['experiment_desc']))
 
-            print(self.metric_counter.loss_message())
             logging.debug("Experiment Name: %s, Epoch: %d, Loss: %s" % (
                 self.config['experiment_desc'], epoch, self.metric_counter.loss_message()))
 
-    def _run_epoch(self, epoch):
+    def _run_epoch(self, epoch, valid=False):
         self.metric_counter.clear()
-        for param_group in self.optimizer.param_groups:
-            lr = param_group['lr']  # ??
-
-        epoch_size = self.config.get('train_batches_per_epoch') or len(self.train_dataset)
-        tq = tqdm.tqdm(self.train_dataset, total=epoch_size)
-        tq.set_description('Epoch {}, lr {}'.format(epoch, lr))
+        run_dataset = self.train_dataset if not valid else self.val_dataset
+        epoch_size = min(self.config.get('batches_per_epoch'), len(run_dataset))
+        tq = tqdm.tqdm(run_dataset, total=epoch_size)
+        tq.set_description('Epoch {}'.format(epoch) if not valid else "Validation")
         i = 0
         for data in tq:
-            # 抽象一层 model 管理 networks
-            # inputs, targets = self.model.get_input(data)
             inputs, labels = data
-            labels = labels.view(len(labels), -1)
             inputs, labels = inputs.to(device), labels.to(device)
             outputs = self.model(inputs)
-            labels = labels.float()
-
-            self.optimizer.zero_grad()
+            
+            if not valid:
+                self.optimizer.zero_grad()
             loss = self.criterion(outputs, labels)
-            loss.backward()
-            self.optimizer.step()
+            if not valid:
+                loss.backward()
+                self.optimizer.step()
 
             outputs, labels = map(inverse_PM, (outputs, labels))
             outputs, labels = map(value2class, (outputs, labels))
-            # correct = torch.sum(outputs == labels).item()
-            correct = (outputs == labels).data  # 向量中1的
+            correct = torch.sum(outputs == labels).item()
+            acc = correct / labels.size(0)
 
             self.metric_counter.add_losses(loss.item())
-            self.metric_counter.add_metrics(correct)  #?? correct 和 loss 的计算都有问题
+            self.metric_counter.add_metrics(acc)
             # metric_counter 内求平均值
-            tq.set_postfix(loss=self.metric_counter.loss_message())
+            tq.set_postfix(loss_acc=self.metric_counter.loss_message())
            
             i += 1
             if i > epoch_size:
                 break
         tq.close()
-        self.metric_counter.write_to_tensorboard(epoch)
-
-    def _validate(self, epoch):
-        self.metric_counter.clear()
-        epoch_size = self.config.get('val_batches_per_epoch') or len(self.val_dataset)
-        tq = tqdm.tqdm(self.val_dataset, total=epoch_size)
-        tq.set_description('Validation')
-        i = 0
-        for data in tq:
-            inputs, labels = data
-            labels = labels.view(len(labels), -1)
-            inputs, labels = inputs.to(device), labels.to(device)
-            outputs = self.model(inputs)
-            labels = labels.float()
-
-            loss = self.criterion(outputs, labels)
-            outputs, labels = map(inverse_PM, (outputs, labels))
-            outputs, labels = map(value2class, (outputs, labels))
-            correct = torch.sum(outputs == labels).item()
-
-            self.metric_counter.add_losses(loss.item())
-            self.metric_counter.add_metrics(correct)
-            # metric_counter 内求平均值
-            tq.set_postfix(loss=self.metric_counter.loss_message())
-
-            i += 1
-            if i > epoch_size:
-                break
-        tq.close()
-        self.metric_counter.write_to_tensorboard(epoch, validation=True)
+        self.metric_counter.write_to_tensorboard(epoch, validation=valid)
 
     def _get_optim(self, params):
         if self.config['optimizer']['name'] == 'adam':
@@ -142,30 +99,32 @@ class Trainer:
         self.model = get_nets(self.config['model'])
         self.model.to(device)
         self.optimizer = self._get_optim(filter(lambda p: p.requires_grad, self.model.parameters()))
-
-
-def mainFunc():
-    set_seed(1)  # set random seed
-
-    train_dir = os.path.join(data_dir, "train")
-    valid_dir = os.path.join(data_dir, "val")
-
-    train_transform = get_transform(train_imgsize, 'Resize')
-    valid_transform = get_transform(train_imgsize, 'Resize')
-
-    # construct dataset, DataLoder
-    train_data = ImagePMSet(root=train_dir, transform=train_transform)
-    valid_data = ImagePMSet(root=valid_dir, transform=valid_transform)
-    train_loader = DataLoader(dataset=train_data, batch_size=train_batch, shuffle=True)
-    valid_loader = DataLoader(dataset=valid_data, batch_size=train_batch)
-    data_loaders = {'train': train_loader, 'val': valid_loader}
-
-    trainer = Trainer(config_list, train=train_loader, val=valid_loader)
-    trainer.train()
     
 
 if __name__ == "__main__":
-    mainFunc()
+    with open('networks/config/config.yaml', 'r') as file:
+        config_list = yaml.load(file, Loader=yaml.FullLoader)
+        data_dir = config_list['nonsky_dir']
+        batch_size = config_list['batch_size']
+        train_imgsize = config_list['image_size']
+
+    train_dir = os.path.join(data_dir, "train")
+    train_transform = get_transform(train_imgsize, 'Resize')
+    custom_dataset = ImagePMSet(root=train_dir, transform=train_transform)
+    # 先记录下来，后面再写入文件. 42.245478541401894, 15.92258928945192
+    PM_mean, PM_std = custom_dataset.get_mean_std()
+
+    train_size = int(len(custom_dataset) * 7 / 8)  # 7:1
+    valid_size = len(custom_dataset) - train_size
+    train_data, valid_data = random_split(custom_dataset, [train_size, valid_size])
+    print("Train data length:{}, Val data length:{}".format(len(train_data), len(valid_data)))
+
+    # 后续若 Subset 使用不同的 transform 如何处理？
+    train_loader = DataLoader(dataset=train_data, batch_size=batch_size)
+    valid_loader = DataLoader(dataset=valid_data, batch_size=batch_size)
+
+    trainer = Trainer(config_list, train=train_loader, val=valid_loader)
+    trainer.train()
 
 
 

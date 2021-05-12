@@ -57,15 +57,15 @@ class ImagePMSet(data.Dataset):
             pil_img = np.asarray(pil_img)
             data = torch.from_numpy(pil_img)
 
-        # normalize the PM2.5 data
+        # normalize the PM2.5 data, 返回 Tensor 类型 增加1维
         data_y = (PM25 - self.PM_mean) / self.PM_std
-        return data, data_y
+        return data, torch.from_numpy(np.array([data_y], dtype=np.float32))
 
     def __len__(self):
         return len(self.imgs)
 
-    def inverse_PM(self, PMs):
-        return PMs * self.PM_std + self.PM_mean
+    def get_mean_std(self):
+        return (self.PM_mean, self.PM_std)  # 元组不可更改
 
 
 class ImgDataset(data.Dataset):
