@@ -67,7 +67,7 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
 
-            outputs, labels = map(inverse_PM, (outputs, labels))
+            outputs, labels = map(inverse_PM, (outputs, labels))  # bug
             outputs, labels = map(value2class, (outputs, labels))
             correct = torch.sum(outputs == labels).item()
             acc = correct / labels.size(0)

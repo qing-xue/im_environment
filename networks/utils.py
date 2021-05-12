@@ -7,7 +7,8 @@ import random
 plt.ion()  
 
 
-def inverse_PM(PMs, PM_mean=45, PM_std=0.5):
+# # 先记录下来，后面再写入文件. 42.245478541401894, 15.92258928945192
+def inverse_PM(PMs, PM_mean=42.25, PM_std=15.92):
     return PMs * PM_std + PM_mean
 
 

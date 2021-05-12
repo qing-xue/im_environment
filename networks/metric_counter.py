@@ -10,7 +10,7 @@ WINDOW_SIZE = 100  # 只计算最近的对应 batch 数目的指标的平均值
 class MetricCounter:
     def __init__(self, exp_name):
         self.writer = SummaryWriter(exp_name)
-        logging.basicConfig(filename='{}.log'.format(exp_name), level=logging.DEBUG)
+        logging.basicConfig(filename='data/{}.log'.format(exp_name), level=logging.DEBUG)
         self.metrics = defaultdict(list)
         self.images = defaultdict(list)
         self.best_metric = 0
