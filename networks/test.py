@@ -39,13 +39,13 @@ class Tester:
                 PMs = inverse_PM(outputs.numpy().flatten())
                 classes = value2class(PMs)
 
-            PM_list.append(PMs)
-            class_list.append(classes)
+            PM_list.append(PMs[0])
+            class_list.append(classes[0])
             print('Predict PM2.5: {}, classes: {}'.format(PMs, classes))
 
         print('Median PM2.5: {}, class: {}'.format(np.median(PM_list), np.median(class_list)))  # 会有 0.5
         class_mode = stats.mode(class_list)  # PM2.5 是浮点数不好计算众数
-        print('Mode   class: {}, count: {}'.format(class_mode[0][0], class_mode[1][0]))
+        print('Mode class: {}, count: {}/{}'.format(class_mode[0][0], class_mode[1][0], self.crop_img_blocks))
 
         time_end = time.time()
         print('Single image time cost {:.2f} s'.format(time_end - time_start))
