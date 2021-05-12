@@ -43,11 +43,6 @@ def set_seed(seed):
     random.seed(seed)     
 
 
-def mkdir(floder):
-    if not os.path.exists(floder):
-        os.makedirs(floder)
-
-
 def imshow(inp, title=None):
     inp = inp.numpy().transpose((1, 2, 0))
     # plt.figure(figsize=(10, 10))
@@ -63,7 +58,3 @@ def show_databatch(inputs, classes, class_names=None):
         class_names = classes
     out = torchvision.utils.make_grid(inputs)
     imshow(out, title=[class_names[x] for x in classes])
-
-
-if __name__ == '__main__':
-    set_seed(1)

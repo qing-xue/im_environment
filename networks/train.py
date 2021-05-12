@@ -10,12 +10,6 @@ import yaml
 import tqdm
 import logging
 
-import sys
-from pathlib import Path
-current_folder = Path(__file__).absolute().parent  # ugly
-father_folder = str(current_folder.parent)
-sys.path.insert(0, father_folder)
-
 from utils import set_seed, value2class, mkdir, inverse_PM
 from datasets import ImagePMSet, get_transform
 from networks import get_nets
@@ -23,6 +17,7 @@ from metric_counter import MetricCounter
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 set_seed(1)  # set different random seed
+
 
 class Trainer:
     def __init__(self, config, train: DataLoader, val: DataLoader):
@@ -33,6 +28,7 @@ class Trainer:
 
     def train(self):
         self._init_params()
+        self.model.to(device)
         for epoch in range(0, self.config['num_epochs']):
             self._run_epoch(epoch)
             self._run_epoch(epoch, valid=True)
@@ -84,12 +80,14 @@ class Trainer:
         self.metric_counter.write_to_tensorboard(epoch, validation=valid)
 
     def _get_optim(self, params):
+        lr = self.config['optimizer']['lr']
+        momentum = self.config['optimizer']['momentum']
         if self.config['optimizer']['name'] == 'adam':
-            optimizer = optim.Adam(params, lr=self.config['optimizer']['lr'])
+            optimizer = optim.Adam(params, lr=lr, momentum=momentum)
         elif self.config['optimizer']['name'] == 'sgd':
-            optimizer = optim.SGD(params, lr=self.config['optimizer']['lr'])
+            optimizer = optim.SGD(params, lr=lr, momentum=momentum)
         elif self.config['optimizer']['name'] == 'adadelta':
-            optimizer = optim.Adadelta(params, lr=self.config['optimizer']['lr'])
+            optimizer = optim.Adadelta(params, lr=lr, momentum=momentum)
         else:
             raise ValueError("Optimizer [%s] not recognized." % self.config['optimizer']['name'])
         return optimizer
@@ -97,7 +95,6 @@ class Trainer:
     def _init_params(self):
         self.criterion = nn.MSELoss()  # get_loss 抽象
         self.model = get_nets(self.config['model'])
-        self.model.to(device)
         self.optimizer = self._get_optim(filter(lambda p: p.requires_grad, self.model.parameters()))
     
 

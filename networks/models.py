@@ -46,23 +46,3 @@ def visualize_model(vgg, dataloader, num_images=6, class_names=None):
             break
         
     vgg.train(mode=was_training)  # Revert model back to original training state
-
-
-def vgg16_customize(vgg16, out):
-    """替换 vgg 网络最后一层的输出向量
-
-    Params:
-        out: 输出向量个数
-    """
-    num_features = vgg16.classifier[6].in_features
-    features = list(vgg16.classifier.children())[:-1]  # Remove last layer
-    features.extend([nn.Linear(num_features, out)])
-    vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
-
-    print(vgg16)
-    return vgg16
-
-
-if __name__ == '__main__':
-    net = resnet34_custom(3)
-    print(net)

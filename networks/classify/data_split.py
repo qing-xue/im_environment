@@ -2,20 +2,11 @@
 
 并按照 datasets.ImageFolder 的方式组织目录
 """
-
 import os
 import re
 import shutil
 import yaml
 import glob
-
-import sys
-from pathlib import Path
-current_folder = Path(__file__).absolute().parent  # ugly
-father_folder = str(current_folder.parent)
-sys.path.insert(0, father_folder)
-
-from utils import mkdir
 
 # 仅使用取整后的 PM2.5 值
 with open('networks/config/config.yaml') as file:
@@ -30,6 +21,11 @@ pollution = {
     'L1': 70,
     'L2': 100
 }
+
+
+def mkdir(floder):
+    if not os.path.exists(floder):
+        os.makedirs(floder)
 
 
 def add_to_path(dst_path, pollution, PM25):
@@ -72,7 +68,7 @@ def split_train_val(split_date=1107):
             print(os.path.join(datax_dir, filename), "==>", dst_path)
 
 
-def bakc_split():
+def back_split():
     """ 回滚数据集划分，将图块重归至一个文件夹 """
     paths_mask = datax_dir + '/*/*/*.bmp'
     img_paths = glob.glob(paths_mask)
@@ -85,7 +81,7 @@ if __name__ == '__main__':
     if not split_isback:
         split_train_val(split_date)
     else:
-        bakc_split()
+        back_split()
 
 
 

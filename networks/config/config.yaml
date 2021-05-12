@@ -4,21 +4,21 @@ experiment_desc: 'experiment1'
 
 # nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
-# nonsky_dir: ../../Heshan_imgset/256x256/non_sky
-
-train:
-  pretrained: True
-
-val:
-  model: data/pth/vgg16_bn.pth
+# nonsky_dir: ../Heshan_imgset/256x256/non_sky
 
 data_split:
   split_date: 1107
   split_back: False
 
 model:
-  g_name: resnet34
+  g_name: vgg16
   out_features: 1
+
+train:
+  pretrained: True
+
+test:
+  model_path: data/vgg16_bn.pth
 
 num_epochs: 3
 batches_per_epoch: 10  # min(*, len(run_dataset))
@@ -27,4 +27,5 @@ image_size: [224, 224]
 
 optimizer:
   name: sgd
-  lr: 0.0001
+  lr: 0.0005
+  momentum: 0.9
