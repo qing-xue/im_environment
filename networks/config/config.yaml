@@ -2,8 +2,8 @@
 project: im_invironment
 experiment_desc: 'experiment1'
 
-# nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
-nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
+nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
+# nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
 # nonsky_dir: ../Heshan_imgset/256x256/non_sky
 
 data_split:
@@ -11,14 +11,15 @@ data_split:
   split_back: False
 
 model:
-  g_name: vgg16
+  g_name: resnet34
   out_features: 1
 
 train:
   pretrained: True
 
 test:
-  model_path: data/vgg16_bn.pth
+  model_path: ../data/Resnet/resnet34_re.h5
+  crop_img_blocks: 20
 
 num_epochs: 3
 batches_per_epoch: 10  # min(*, len(run_dataset))

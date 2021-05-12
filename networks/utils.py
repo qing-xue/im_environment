@@ -4,7 +4,13 @@ import torchvision
 import torch
 import numpy as np
 import random
+
 plt.ion()  
+
+
+def mkdir(floder):
+    if not os.path.exists(floder):
+        os.makedirs(floder)
 
 
 # # 先记录下来，后面再写入文件. 42.245478541401894, 15.92258928945192
@@ -21,17 +27,18 @@ def im_segment(input_):
 
 
 def value2class(PMs, pollution={'L0':35, 'L1':70, 'L2':100}):
+    classes = np.zeros(len(PMs))
     for i, x in enumerate(PMs):
         if x <= pollution['L0']:
-            PMs[i] = int(0)
+            classes[i] = int(0)
         elif x <= pollution['L1']:
-            PMs[i] = int(1)
+            classes[i] = int(1)
         elif x <= pollution['L2']:
-            PMs[i] = int(2)
+            classes[i] = int(2)
         else:
-            PMs[i] = int(2)  # 有剩余的也暂时归入最后一类
+            classes[i] = int(2)  # 有剩余的也暂时归入最后一类
 
-    return PMs
+    return classes
 
 
 def set_seed(seed):

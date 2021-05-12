@@ -2,15 +2,12 @@ import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
-import torchvision.transforms as transforms
-from torch.utils.tensorboard import SummaryWriter
 import torch.optim as optim
-import time
 import yaml
 import tqdm
 import logging
 
-from utils import set_seed, value2class, mkdir, inverse_PM
+from utils import set_seed, value2class, inverse_PM
 from datasets import ImagePMSet, get_transform
 from networks import get_nets
 from metric_counter import MetricCounter
