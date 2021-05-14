@@ -7,6 +7,9 @@ import re
 import shutil
 import yaml
 import glob
+import random
+
+random.seed(1)
 
 # 仅使用取整后的 PM2.5 值
 with open('networks/config/config.yaml') as file:
@@ -15,6 +18,7 @@ with open('networks/config/config.yaml') as file:
     split_fig = config_list['data_split']
     split_date = split_fig['split_date']
     split_isback = split_fig['split_back']
+    val_ratio = split_fig['val_ratio']
 
 pollution = {
     'L0': 35,
@@ -44,7 +48,7 @@ def add_to_path(dst_path, pollution, PM25):
 
 def split_train_val(split_date=1107):
     """ 11月?号前的作为训练集，往后的作为验证集 """
-    train_folder = os.path.join(datax_dir, 'train') 
+    train_folder = os.path.join(datax_dir, 'train')
     val_folder = os.path.join(datax_dir, 'val') 
     mkdir(train_folder)
     mkdir(val_folder)
@@ -68,6 +72,32 @@ def split_train_val(split_date=1107):
             print(os.path.join(datax_dir, filename), "==>", dst_path)
 
 
+def split_train_val_random(val=0.2):
+    """ 随机划分训练集，验证集 """
+    train_folder = os.path.join(datax_dir, 'train')
+    val_folder = os.path.join(datax_dir, 'val') 
+    mkdir(train_folder)
+    mkdir(val_folder)
+
+    for y in pollution.keys():
+        mkdir(os.path.join(train_folder, y))
+        mkdir(os.path.join(val_folder, y))
+
+    for filename in os.listdir(datax_dir):
+        if not filename.endswith('.bmp'):
+            continue
+        date = int(filename[:4])
+        PM25 = int(re.split('[-.]', filename)[-2])
+        if random.random() < 1 - val:
+            dst_path = add_to_path(train_folder, pollution, PM25)
+            shutil.move(os.path.join(datax_dir, filename), dst_path)
+            print(os.path.join(datax_dir, filename), "==>", dst_path)
+        else:
+            dst_path = add_to_path(val_folder, pollution, PM25)
+            shutil.move(os.path.join(datax_dir, filename), dst_path)
+            print(os.path.join(datax_dir, filename), "==>", dst_path)
+
+
 def back_split():
     """ 回滚数据集划分，将图块重归至一个文件夹 """
     paths_mask = datax_dir + '/*/*/*.bmp'
@@ -79,7 +109,7 @@ def back_split():
 
 if __name__ == '__main__':
     if not split_isback:
-        split_train_val(split_date)
+        split_train_val_random(val_ratio)
     else:
         back_split()
 

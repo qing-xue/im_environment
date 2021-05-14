@@ -1,18 +1,19 @@
 ---
 project: im_invironment
-experiment_desc: 'experiment1'
+experiment_desc: 'experiment'
 
-nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
+# nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 # nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
-# nonsky_dir: ../Heshan_imgset/256x256/non_sky
+nonsky_dir: ../Heshan_imgset/256x256/non_sky
 
 data_split:
-  split_date: 1107
+  split_date: 1107  # need to delete
+  val_ratio: 0.2
   split_back: False
 
 model:
   g_name: resnet34
-  out_features: 1
+  out_features: 3
 
 train:
   pretrained: True
@@ -21,12 +22,12 @@ test:
   model_path: ../data/Resnet/resnet34_re.h5
   crop_img_blocks: 20
 
-num_epochs: 3
-batches_per_epoch: 10  # min(*, len(run_dataset))
+num_epochs: 50
+batches_per_epoch: 1000  # min(*, len(run_dataset))
 batch_size: 16
 image_size: [224, 224]
 
 optimizer:
   name: sgd
-  lr: 0.0005
+  lr: 0.0001  # 0.0005 -> overfit?
   momentum: 0.9
