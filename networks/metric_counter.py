@@ -23,26 +23,24 @@ class MetricCounter:
         self.metrics = defaultdict(list)
         self.images = defaultdict(list)
 
-    def add_losses(self, l_mse):
+    def add_losses(self, keys, values):
         # 自定义 ('MSE_loss',) 还是由外部传入
-        for name, value in zip(('MSE_loss',),
-                               (l_mse,)):
+        for name, value in zip(keys, values):
             self.metrics[name].append(value)
 
-    def add_metrics(self, acc):
-        for name, value in zip(('Acc',),
-                               (acc,)):
+    def add_metrics(self, keys, values):
+        for name, value in zip(keys, values):
             self.metrics[name].append(value)
 
     def loss_message(self):
-        # ('MSE_loss',) 可设置为私有变量，为何作者不输出 Acc？
-        metrics = ((k, np.mean(self.metrics[k][-WINDOW_SIZE:])) for k in ('MSE_loss', 'Acc'))
+        metrics = ((k, np.mean(self.metrics[k][-WINDOW_SIZE:])) for k in self.metrics.keys())
         return '; '.join(map(lambda x: f'{x[0]}={x[1]:.4f}', metrics))
 
     def write_to_tensorboard(self, epoch_num, validation=False):
         scalar_prefix = 'Validation' if validation else 'Train'
-        for tag in ('MSE_loss', 'Acc'):
-            self.writer.add_scalar(f'{scalar_prefix}_{tag}', np.mean(self.metrics[tag]), global_step=epoch_num)
+        for tag in self.metrics.keys():
+            # 比 self.metrics[k][-WINDOW_SIZE:]) 更精确的计算
+            self.writer.add_scalars(tag, {scalar_prefix: np.mean(self.metrics[tag])}, global_step=epoch_num)
         for tag in self.images:
             imgs = self.images[tag]
             if imgs:
@@ -50,9 +48,10 @@ class MetricCounter:
                 self.writer.add_images(tag, imgs[:, :, :, ::-1].astype('float32') / 255, dataformats='NHWC',
                                        global_step=epoch_num)
                 self.images[tag] = []
+        self.writer.close()  # tensorboard --logdir=networks/classify/exp_resnet34_class/
 
-    def update_best_model(self):
-        cur_metric = np.mean(self.metrics['Acc'])
+    def update_best_model(self, key):
+        cur_metric = np.mean(self.metrics[key])  # key = 'Acc'
         if self.best_metric < cur_metric:
             self.best_metric = cur_metric
             return True

@@ -36,7 +36,7 @@ class TrainerMul:
             self._run_epoch(epoch)
             self._run_epoch(epoch, valid=True)
 
-            if self.metric_counter.update_best_model(): 
+            if self.metric_counter.update_best_model(self.best_metric):
                 torch.save({
                     'model': self.model.state_dict()
                 }, 'best_{}.h5'.format(self.config['experiment_desc']))
@@ -69,8 +69,8 @@ class TrainerMul:
             correct = torch.sum(preds == labels).item()
             acc = correct * 1. / labels.size(0)
 
-            self.metric_counter.add_losses(loss.item())
-            self.metric_counter.add_metrics(acc)
+            self.metric_counter.add_losses(('CrossEntropyLoss',), (loss.item(),))
+            self.metric_counter.add_metrics(('Acc',), (acc,))
             # metric_counter 内求平均值
             tq.set_postfix(loss_acc=self.metric_counter.loss_message())
            
@@ -97,10 +97,11 @@ class TrainerMul:
         self.criterion = nn.CrossEntropyLoss()  # get_loss 抽象
         self.model = get_nets(self.config['model'])
         self.optimizer = self._get_optim(filter(lambda p: p.requires_grad, self.model.parameters()))
+        self.best_metric = 'Acc'
     
 
 if __name__ == "__main__":
-    with open('networks/config/config.yaml', 'r') as file:
+    with open('../config/config.yaml', 'r') as file:
         config_list = yaml.load(file, Loader=yaml.FullLoader)
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']
