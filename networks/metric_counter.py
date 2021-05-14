@@ -10,7 +10,8 @@ WINDOW_SIZE = 100  # 只计算最近的对应 batch 数目的指标的平均值
 class MetricCounter:
     def __init__(self, exp_name):
         self.writer = SummaryWriter(exp_name)
-        logging.basicConfig(filename='data/{}.log'.format(exp_name), level=logging.DEBUG)
+        # 路径问题 data/
+        logging.basicConfig(filename='{}.log'.format(exp_name), level=logging.DEBUG)
         self.metrics = defaultdict(list)
         self.images = defaultdict(list)
         self.best_metric = 0
@@ -23,6 +24,7 @@ class MetricCounter:
         self.images = defaultdict(list)
 
     def add_losses(self, l_mse):
+        # 自定义 ('MSE_loss',) 还是由外部传入
         for name, value in zip(('MSE_loss',),
                                (l_mse,)):
             self.metrics[name].append(value)

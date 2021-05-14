@@ -13,7 +13,17 @@ def mkdir(floder):
         os.makedirs(floder)
 
 
-# # 先记录下来，后面再写入文件. 42.245478541401894, 15.92258928945192
+# 查看各个类别样本情况？效率很低；Subset bug!
+def dataset_class_count(dataset):
+    print('Total count: ', len(dataset))
+    for key, value in dataset.class_to_idx.items():
+        # custom_dataset.targets == 0 获取索引失败？
+        class_num = len([x for x in dataset.imgs if x[1] == value])
+        print('Class: {}, count: {}, percent: {:.2%}'.format(
+            key, class_num, class_num / len(dataset)))
+
+
+# 先记录下来，后面再写入文件. 42.245478541401894, 15.92258928945192
 def inverse_PM(PMs, PM_mean=42.25, PM_std=15.92):
     return PMs * PM_std + PM_mean
 

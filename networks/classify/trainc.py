@@ -1,13 +1,23 @@
+import os, sys
+os.chdir(sys.path[0])  # 设置当前工作目录，放再import其他路径模块之前
+
 import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 import torch.optim as optim
+from torchvision.datasets import ImageFolder
 import yaml
 import tqdm
 import logging
 
-from utils import set_seed, value2class, inverse_PM
+import sys
+from pathlib import Path
+current_folder = Path(__file__).absolute().parent  # ugly
+father_folder = str(current_folder.parent)
+sys.path.insert(0, father_folder)
+
+from utils import set_seed, value2class, inverse_PM, dataset_class_count
 from datasets import ImagePMSet, get_transform
 from networks import get_nets
 from metric_counter import MetricCounter
@@ -16,7 +26,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 set_seed(1)  # set different random seed
 
 
-class Trainer:
+class TrainerMul:
     def __init__(self, config, train: DataLoader, val: DataLoader):
         self.config = config
         self.train_dataset = train
@@ -33,10 +43,10 @@ class Trainer:
             if self.metric_counter.update_best_model(): 
                 torch.save({
                     'model': self.model.state_dict()
-                }, 'data/best_{}.h5'.format(self.config['experiment_desc']))
+                }, 'best_{}.h5'.format(self.config['experiment_desc']))
             torch.save({
                 'model': self.model.state_dict()
-            }, 'data/last_{}.h5'.format(self.config['experiment_desc']))
+            }, 'last_{}.h5'.format(self.config['experiment_desc']))
 
             logging.debug("Experiment Name: %s, Epoch: %d, Loss: %s" % (
                 self.config['experiment_desc'], epoch, self.metric_counter.loss_message()))
@@ -51,18 +61,16 @@ class Trainer:
         for data in tq:
             inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
-            outputs = self.model(inputs)
-            
             if not valid:
                 self.optimizer.zero_grad()
+            outputs = self.model(inputs)
             loss = self.criterion(outputs, labels)
             if not valid:
                 loss.backward()
                 self.optimizer.step()
 
-            outputs, labels = map(inverse_PM, (outputs, labels))  # bug
-            outputs, labels = map(value2class, (outputs, labels))
-            correct = torch.sum(outputs == labels).item()
+            _, preds = torch.max(outputs.data, 1)
+            correct = torch.sum(preds == labels).item()
             acc = correct * 1. / labels.size(0)
 
             self.metric_counter.add_losses(loss.item())
@@ -90,34 +98,33 @@ class Trainer:
         return optimizer
 
     def _init_params(self):
-        self.criterion = nn.MSELoss()  # get_loss 抽象
+        self.criterion = nn.CrossEntropyLoss()  # get_loss 抽象
         self.model = get_nets(self.config['model'])
         self.optimizer = self._get_optim(filter(lambda p: p.requires_grad, self.model.parameters()))
     
 
 if __name__ == "__main__":
-    with open('networks/config/config.yaml', 'r') as file:
+    with open('../config/config.yaml', 'r') as file:
         config_list = yaml.load(file, Loader=yaml.FullLoader)
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']
-        train_imgsize = config_list['image_size']
+        imgsize = config_list['image_size']
 
     train_dir = os.path.join(data_dir, "train")
-    train_transform = get_transform(train_imgsize, 'Resize')
-    custom_dataset = ImagePMSet(root=train_dir, transform=train_transform)
-    # 先记录下来，后面再写入文件. 42.245478541401894, 15.92258928945192
-    PM_mean, PM_std = custom_dataset.get_mean_std()
+    valid_dir = os.path.join(data_dir, "val")
+    train_transform = get_transform(imgsize, 'Resize')
+    valid_transform = get_transform(imgsize, 'Resize')
+    train_dataset = ImageFolder(train_dir, transform=train_transform)
+    valid_dataset = ImageFolder(valid_dir, transform=valid_transform)
 
-    train_size = int(len(custom_dataset) * 7 / 8)  # 7:1
-    valid_size = len(custom_dataset) - train_size
-    train_data, valid_data = random_split(custom_dataset, [train_size, valid_size])
-    print("Train data length:{}, Val data length:{}".format(len(train_data), len(valid_data)))
+    # 输出不同类别下样本数目、比例
+    dataset_class_count(train_dataset)
+    dataset_class_count(valid_dataset)
 
-    # 后续若 Subset 使用不同的 transform 如何处理？
-    train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    valid_loader = DataLoader(dataset=valid_data, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+    valid_loader = DataLoader(dataset=valid_dataset, batch_size=batch_size, shuffle=True)
 
-    trainer = Trainer(config_list, train=train_loader, val=valid_loader)
+    trainer = TrainerMul(config_list, train=train_loader, val=valid_loader)
     trainer.train()
 
 
