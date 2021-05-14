@@ -2,9 +2,9 @@
 project: im_invironment
 experiment_desc: 'experiment'
 
-# nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
+nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 # nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
-nonsky_dir: ../Heshan_imgset/256x256/non_sky
+# nonsky_dir: ../Heshan_imgset/256x256/non_sky
 
 data_split:
   split_date: 1107  # need to delete

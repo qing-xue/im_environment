@@ -1,7 +1,3 @@
-import os, sys
-os.chdir(sys.path[0])  # 设置当前工作目录，放再import其他路径模块之前
-
-import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
@@ -11,11 +7,11 @@ import yaml
 import tqdm
 import logging
 
-import sys
-from pathlib import Path
-current_folder = Path(__file__).absolute().parent  # ugly
-father_folder = str(current_folder.parent)
-sys.path.insert(0, father_folder)
+import os, sys
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+print(sys.path)  # 必要时检查，有时要进入脚本所在目录运行
 
 from utils import set_seed, value2class, inverse_PM, dataset_class_count
 from datasets import ImagePMSet, get_transform
@@ -104,7 +100,7 @@ class TrainerMul:
     
 
 if __name__ == "__main__":
-    with open('../config/config.yaml', 'r') as file:
+    with open('networks/config/config.yaml', 'r') as file:
         config_list = yaml.load(file, Loader=yaml.FullLoader)
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']
