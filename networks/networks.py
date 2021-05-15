@@ -8,7 +8,6 @@ def resnet34_custom(out, pretrained=True):
     num_ftrs = net.fc.in_features
     net.fc = nn.Linear(num_ftrs, out)
 
-    print(net)
     return net
 
 
@@ -24,7 +23,6 @@ def vgg16_customize(out, pretrained=True):
     features.extend([nn.Linear(num_features, out)])
     net.classifier = nn.Sequential(*features)  # Replace the model classifier
 
-    print(net)
     return net
 
 

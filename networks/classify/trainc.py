@@ -73,7 +73,7 @@ class TrainerMul:
 
             self.metric_counter.add_losses(('CrossEntropyLoss',), (loss.item(),))
             self.metric_counter.add_metrics(('Acc',), (acc,))
-            self.metric_counter.add_CMatrix(labels.numpy(), preds.numpy())
+            self.metric_counter.add_CMatrix(labels.cpu().data.numpy(), preds.cpu().data.numpy())
             tq.set_postfix(loss_acc=self.metric_counter.loss_message())  # metric_counter 内求平均值
            
             i += 1
@@ -106,7 +106,7 @@ class TrainerMul:
     
 
 if __name__ == "__main__":
-    with open('../config/config.yaml', 'r') as file:
+    with open('networks/config/config.yaml', 'r') as file:
         config_list = yaml.load(file, Loader=yaml.FullLoader)
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']
