@@ -35,4 +35,5 @@ def get_nets(model_config):
     elif 'vgg16' == model_name:
         model = vgg16_customize(out_features)
 
+    print(model)
     return model

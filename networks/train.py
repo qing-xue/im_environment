@@ -6,12 +6,15 @@ import torch.optim as optim
 import yaml
 import tqdm
 import logging
+import numpy as np
+from sklearn.metrics import mean_absolute_error
 
 from utils import set_seed, value2class, inverse_PM
 from datasets import ImagePMSet, get_transform
 from networks import get_nets
 from metric_counter import MetricCounter
 
+curPath = os.path.abspath(os.path.dirname(__file__))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 set_seed(1)  # set different random seed
 
@@ -33,13 +36,14 @@ class Trainer:
             if self.metric_counter.update_best_model(self.best_metric):
                 torch.save({
                     'model': self.model.state_dict()
-                }, 'data/best_{}.h5'.format(self.config['experiment_desc']))
+                }, '{}/best_{}.h5'.format(self.save_dir, self.config['experiment_desc']))
             torch.save({
                 'model': self.model.state_dict()
-            }, 'data/last_{}.h5'.format(self.config['experiment_desc']))
+            }, '{}/last_{}.h5'.format(self.save_dir, self.config['experiment_desc']))
 
             logging.debug("Experiment Name: %s, Epoch: %d, Loss: %s" % (
-                self.config['experiment_desc'], epoch, self.metric_counter.loss_message()))
+                '{}/{}'.format(self.save_dir, self.config['experiment_desc']),
+                epoch, self.metric_counter.loss_message()))
 
     def _run_epoch(self, epoch, valid=False):
         self.metric_counter.clear()
@@ -60,13 +64,15 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
 
+            outputs, labels = outputs.cpu().data.numpy(), labels.cpu().data.numpy()
             outputs, labels = map(inverse_PM, (outputs, labels))  # bug
+            mse = mean_absolute_error(labels, outputs)
             outputs, labels = map(value2class, (outputs, labels))
-            correct = torch.sum(outputs == labels).item()
-            acc = correct * 1. / labels.size(0)
+            correct = np.sum(outputs == labels)
+            acc = correct * 1. / labels.shape[0]
 
             self.metric_counter.add_losses(('MSELoss',), (loss.item(),))
-            self.metric_counter.add_metrics(('Acc',), (acc,))
+            self.metric_counter.add_metrics(('Acc', 'MSE'), (acc, mse))
             # metric_counter 内求平均值
             tq.set_postfix(loss_acc=self.metric_counter.loss_message())
            
@@ -94,29 +100,30 @@ class Trainer:
         self.model = get_nets(self.config['model'])
         self.optimizer = self._get_optim(filter(lambda p: p.requires_grad, self.model.parameters()))
         self.best_metric = 'Acc'
+        self.save_dir = self.config['experiment_desc']
+        if not os.path.exists(os.path.join(curPath, self.save_dir)):
+            os.makedirs(os.path.join(curPath, self.save_dir))
     
 
 if __name__ == "__main__":
-    with open('./config/config.yaml', 'r') as file:
+    with open('networks/config/config.yaml', 'r') as file:
         config_list = yaml.load(file, Loader=yaml.FullLoader)
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']
-        train_imgsize = config_list['image_size']
+        imgsize = config_list['image_size']
 
     train_dir = os.path.join(data_dir, "train")
-    train_transform = get_transform(train_imgsize, 'Resize')
-    custom_dataset = ImagePMSet(root=train_dir, transform=train_transform)
-    # 先记录下来，后面再写入文件. 42.245478541401894, 15.92258928945192
-    PM_mean, PM_std = custom_dataset.get_mean_std()
-
-    train_size = int(len(custom_dataset) * 7 / 8)  # 7:1
-    valid_size = len(custom_dataset) - train_size
-    train_data, valid_data = random_split(custom_dataset, [train_size, valid_size])
-    print("Train data length:{}, Val data length:{}".format(len(train_data), len(valid_data)))
+    valid_dir = os.path.join(data_dir, "val")
+    train_transform = get_transform(imgsize, 'Resize')
+    valid_transform = get_transform(imgsize, 'Resize')
+    train_dataset = ImagePMSet(train_dir, transform=train_transform)
+    valid_dataset = ImagePMSet(valid_dir, transform=valid_transform)
+    # 先记录下来，后面再写入文件. 45.6318, 18.3280
+    PM_mean, PM_std = train_dataset.get_mean_std()
 
     # 后续若 Subset 使用不同的 transform 如何处理？
-    train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    valid_loader = DataLoader(dataset=valid_data, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+    valid_loader = DataLoader(dataset=valid_dataset, batch_size=batch_size, shuffle=True)
 
     trainer = Trainer(config_list, train=train_loader, val=valid_loader)
     trainer.train()
