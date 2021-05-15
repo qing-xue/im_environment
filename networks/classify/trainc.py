@@ -39,13 +39,15 @@ class TrainerMul:
             if self.metric_counter.update_best_model(self.best_metric):
                 torch.save({
                     'model': self.model.state_dict()
-                }, 'best_{}.h5'.format(self.config['experiment_desc']))
+                }, '{}/best_{}.h5'.format(self.save_dir, self.config['experiment_desc']))
+                self.metric_counter.write_CMatrix(os.path.join(self.save_dir, self.config['experiment_desc']))
             torch.save({
                 'model': self.model.state_dict()
-            }, 'last_{}.h5'.format(self.config['experiment_desc']))
+            }, '{}/last_{}.h5'.format(self.save_dir, self.config['experiment_desc']))
 
             logging.debug("Experiment Name: %s, Epoch: %d, Loss: %s" % (
-                self.config['experiment_desc'], epoch, self.metric_counter.loss_message()))
+                '{}/{}'.format(self.save_dir, self.config['experiment_desc']),
+                epoch, self.metric_counter.loss_message()))
 
     def _run_epoch(self, epoch, valid=False):
         self.metric_counter.clear()
@@ -71,8 +73,8 @@ class TrainerMul:
 
             self.metric_counter.add_losses(('CrossEntropyLoss',), (loss.item(),))
             self.metric_counter.add_metrics(('Acc',), (acc,))
-            # metric_counter 内求平均值
-            tq.set_postfix(loss_acc=self.metric_counter.loss_message())
+            self.metric_counter.add_CMatrix(labels.numpy(), preds.numpy())
+            tq.set_postfix(loss_acc=self.metric_counter.loss_message())  # metric_counter 内求平均值
            
             i += 1
             if i > epoch_size:
@@ -98,6 +100,9 @@ class TrainerMul:
         self.model = get_nets(self.config['model'])
         self.optimizer = self._get_optim(filter(lambda p: p.requires_grad, self.model.parameters()))
         self.best_metric = 'Acc'
+        self.save_dir = self.config['experiment_desc']
+        if not os.path.exists(os.path.join(curPath, self.save_dir)):
+            os.makedirs(os.path.join(curPath, self.save_dir))
     
 
 if __name__ == "__main__":
