@@ -28,11 +28,17 @@ class TrainerMul:
         self.train_dataset = train
         self.val_dataset = val
         self.metric_counter = MetricCounter(config['experiment_desc'])
+        self.pretrained = config['train']['pretrained']
+        self.start_epoch = 0
 
     def train(self):
         self._init_params()
+        if self.pretrained:
+            self.start_epoch = self.config['train']['start_epoch']
+            self.model.load_state_dict(torch.load(self.config['train']['model_path'], map_location=device)['model'])
         self.model.to(device)
-        for epoch in range(0, self.config['num_epochs']):
+        self.model.train(True)
+        for epoch in range(self.start_epoch, self.start_epoch + self.config['num_epochs']):
             self._run_epoch(epoch)
             self._run_epoch(epoch, valid=True)
 

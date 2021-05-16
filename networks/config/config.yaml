@@ -17,13 +17,15 @@ model:
 
 train:
   pretrained: True
+  start_epoch: 30
+  model_path: data/exp_resnet34_classify_128/last_exp_resnet34_classify_128.h5
 
 test:
   model_path: ../data/Resnet/resnet34_re.h5
   crop_img_blocks: 20
 
-num_epochs: 3         # 10 -> overfit?
-batches_per_epoch: 1  # min(*, len(run_dataset))
+num_epochs: 3           # 10 -> overfit?
+batches_per_epoch: 1    # min(*, len(run_dataset))
 batch_size: 16
 image_size: [128, 128]
 transform_first: RandomCrop
