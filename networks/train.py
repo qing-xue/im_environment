@@ -111,11 +111,12 @@ if __name__ == "__main__":
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']
         imgsize = config_list['image_size']
+        transform_first = config_list['transform_first']
 
     train_dir = os.path.join(data_dir, "train")
     valid_dir = os.path.join(data_dir, "val")
-    train_transform = get_transform(imgsize, 'Resize')
-    valid_transform = get_transform(imgsize, 'Resize')
+    train_transform = get_transform(imgsize, transform_first)
+    valid_transform = get_transform(imgsize, transform_first)
     train_dataset = ImagePMSet(train_dir, transform=train_transform)
     valid_dataset = ImagePMSet(valid_dir, transform=valid_transform)
     # 先记录下来，后面再写入文件. 45.6318, 18.3280

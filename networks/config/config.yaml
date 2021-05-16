@@ -16,7 +16,7 @@ model:
   out_features: 1
 
 train:
-  pretrained: False  # Remember to set false if create a new training process
+  pretrained: False  # Bug! Remember to set false if create a new training process
   start_epoch: 30
   model_path: data/exp_resnet34_classify_128/last_exp_resnet34_classify_128.h5
 

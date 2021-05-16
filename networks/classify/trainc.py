@@ -122,7 +122,7 @@ if __name__ == "__main__":
     train_dir = os.path.join(data_dir, "train")
     valid_dir = os.path.join(data_dir, "val")
     train_transform = get_transform(imgsize, transform_first)
-    valid_transform = get_transform(imgsize, transform_first)
+    valid_transform = get_transform(imgsize, transform_first)  # 验证集不一定跟训练集的transform一致
     train_dataset = ImageFolder(train_dir, transform=train_transform)
     valid_dataset = ImageFolder(valid_dir, transform=valid_transform)
 
