@@ -66,13 +66,13 @@ class Trainer:
 
             outputs, labels = outputs.cpu().data.numpy(), labels.cpu().data.numpy()
             outputs, labels = map(inverse_PM, (outputs, labels))  # bug
-            mse = mean_absolute_error(labels, outputs)
+            mae = mean_absolute_error(labels, outputs)
             outputs, labels = map(value2class, (outputs, labels))
             correct = np.sum(outputs == labels)
             acc = correct * 1. / labels.shape[0]
 
             self.metric_counter.add_losses(('MSELoss',), (loss.item(),))
-            self.metric_counter.add_metrics(('Acc', 'MSE'), (acc, mse))
+            self.metric_counter.add_metrics(('Acc', 'MAE'), (acc, mae))
             # metric_counter 内求平均值
             tq.set_postfix(loss_acc=self.metric_counter.loss_message())
            

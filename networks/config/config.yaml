@@ -1,6 +1,6 @@
 ---
 project: im_invironment
-experiment_desc: 'exp_resnet34_regress'
+experiment_desc: 'exp_resnet34_classify_128'
 
 nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 # nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
@@ -13,7 +13,7 @@ data_split:
 
 model:
   g_name: resnet34
-  out_features: 1
+  out_features: 3
 
 train:
   pretrained: True
@@ -25,7 +25,8 @@ test:
 num_epochs: 3         # 10 -> overfit?
 batches_per_epoch: 1  # min(*, len(run_dataset))
 batch_size: 16
-image_size: [224, 224]
+image_size: [128, 128]
+transform_first: RandomCrop
 
 optimizer:
   name: sgd
