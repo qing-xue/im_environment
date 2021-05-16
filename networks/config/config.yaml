@@ -12,11 +12,11 @@ data_split:
   split_back: False
 
 model:
-  g_name: resnet34
-  out_features: 3
+  g_name: resnet101
+  out_features: 1
 
 train:
-  pretrained: True
+  pretrained: False  # Remember to set false if create a new training process
   start_epoch: 30
   model_path: data/exp_resnet34_classify_128/last_exp_resnet34_classify_128.h5
 
