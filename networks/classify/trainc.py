@@ -37,7 +37,6 @@ class TrainerMul:
             self.start_epoch = self.config['train']['start_epoch']
             self.model.load_state_dict(torch.load(self.config['train']['model_path'], map_location=device)['model'])
         self.model.to(device)
-        self.model.train(True)
         for epoch in range(self.start_epoch, self.start_epoch + self.config['num_epochs']):
             self._run_epoch(epoch)
             self._run_epoch(epoch, valid=True)
@@ -57,7 +56,9 @@ class TrainerMul:
 
     def _run_epoch(self, epoch, valid=False):
         self.metric_counter.clear()
+        self.model.train(not valid)  # 区分训练还是验证阶段
         run_dataset = self.train_dataset if not valid else self.val_dataset
+
         epoch_size = min(self.config.get('batches_per_epoch'), len(run_dataset))
         tq = tqdm.tqdm(run_dataset, total=epoch_size)
         tq.set_description('Epoch {}'.format(epoch) if not valid else "Validation")
