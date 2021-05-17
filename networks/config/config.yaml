@@ -1,10 +1,10 @@
 ---
 project: im_invironment
-experiment_desc: 'exp_resnet34_classify_128'
+experiment_desc: 'exp_resnet34_classify_128_Center'
 
-nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
+# nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 # nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
-# nonsky_dir: ../Heshan_imgset/256x256/non_sky
+nonsky_dir: ../Heshan_imgset/256x256/non_sky
 
 data_split:
   split_date: 1107  # need to delete
@@ -12,23 +12,26 @@ data_split:
   split_back: False
 
 model:
-  g_name: resnet101
-  out_features: 1
+  g_name: resnet34
+  out_features: 3
 
 train:
   pretrained: False  # Bug! Remember to set false if create a new training process
   start_epoch: 30
   model_path: data/exp_resnet34_classify_128/last_exp_resnet34_classify_128.h5
+  transform_first: RandomCrop
+
+val:
+  transform_first: CenterCrop
 
 test:
   model_path: ../data/Resnet/resnet34_re.h5
   crop_img_blocks: 20
 
-num_epochs: 3           # 10 -> overfit?
-batches_per_epoch: 1    # min(*, len(run_dataset))
+num_epochs: 100           # 10 -> overfit?
+batches_per_epoch: 1000   # min(*, len(run_dataset))
 batch_size: 16
 image_size: [128, 128]
-transform_first: RandomCrop
 
 optimizer:
   name: sgd

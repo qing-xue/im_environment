@@ -13,12 +13,14 @@ norm_std  = [0.229, 0.224, 0.225]
 
 
 def get_transform(imgsize, first='Resize'):
-    if first == 'Resize':
+    if 'Resize' == first:
         first = transforms.Resize(imgsize)  # 传函数句柄
-    elif first == 'RandomResizedCrop':
+    elif 'RandomResizedCrop' == first:
         first = transforms.RandomResizedCrop(imgsize)
-    elif first == 'RandomCrop':
+    elif 'RandomCrop' == first:
         first = transforms.RandomCrop(imgsize)
+    elif 'CenterCrop' == first:
+        first = transforms.CenterCrop(imgsize)
 
     transform = transforms.Compose([
         first, 

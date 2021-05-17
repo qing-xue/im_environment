@@ -118,12 +118,13 @@ if __name__ == "__main__":
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']
         imgsize = config_list['image_size']
-        transform_first = config_list['transform_first']
+        train_trans_first = config_list['train']['transform_first']
+        val_trans_first = config_list['val']['transform_first']
 
     train_dir = os.path.join(data_dir, "train")
     valid_dir = os.path.join(data_dir, "val")
-    train_transform = get_transform(imgsize, transform_first)
-    valid_transform = get_transform(imgsize, transform_first)  # 验证集不一定跟训练集的transform一致
+    train_transform = get_transform(imgsize, train_trans_first)
+    valid_transform = get_transform(imgsize, val_trans_first)  # 验证集不一定跟训练集的transform一致
     train_dataset = ImageFolder(train_dir, transform=train_transform)
     valid_dataset = ImageFolder(valid_dir, transform=valid_transform)
 
