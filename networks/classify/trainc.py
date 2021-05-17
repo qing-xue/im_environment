@@ -104,7 +104,7 @@ class TrainerMul:
 
     def _init_params(self):
         self.criterion = nn.CrossEntropyLoss()  # get_loss 抽象
-        self.model = get_nets(self.config['model'])
+        self.model = get_nets(self.config['model']['g_name'], self.config['model']['out_features'])
         self.optimizer = self._get_optim(filter(lambda p: p.requires_grad, self.model.parameters()))
         self.best_metric = 'Acc'
         self.save_dir = self.config['experiment_desc']

@@ -29,9 +29,22 @@ def vgg16_customize(out, pretrained=True):
     return net
 
 
-def get_nets(model_config):
-    model_name = model_config['g_name']
-    out_features = model_config['out_features']
+# def get_nets(model_config):
+#     model_name = model_config['g_name']
+#     out_features = model_config['out_features']
+#
+#     if 'resnet34' == model_name:
+#         model = resnet_custom(out_features, 34)
+#     elif 'resnet101' == model_name:
+#         model = resnet_custom(out_features, 101)
+#     elif 'vgg16' == model_name:
+#         model = vgg16_customize(out_features)
+#
+#     print(model)
+#     return model
+
+
+def get_nets(model_name, out_features):
 
     if 'resnet34' == model_name:
         model = resnet_custom(out_features, 34)

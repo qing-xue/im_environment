@@ -47,7 +47,9 @@ class Trainer:
 
     def _run_epoch(self, epoch, valid=False):
         self.metric_counter.clear()
+        self.model.train(not valid)
         run_dataset = self.train_dataset if not valid else self.val_dataset
+
         epoch_size = min(self.config.get('batches_per_epoch'), len(run_dataset))
         tq = tqdm.tqdm(run_dataset, total=epoch_size)
         tq.set_description('Epoch {}'.format(epoch) if not valid else "Validation")
@@ -111,12 +113,13 @@ if __name__ == "__main__":
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']
         imgsize = config_list['image_size']
-        transform_first = config_list['transform_first']
+        train_trans_first = config_list['train']['transform_first']
+        val_trans_first = config_list['val']['transform_first']
 
     train_dir = os.path.join(data_dir, "train")
     valid_dir = os.path.join(data_dir, "val")
-    train_transform = get_transform(imgsize, transform_first)
-    valid_transform = get_transform(imgsize, transform_first)
+    train_transform = get_transform(imgsize, train_trans_first)
+    valid_transform = get_transform(imgsize, val_trans_first)
     train_dataset = ImagePMSet(train_dir, transform=train_transform)
     valid_dataset = ImagePMSet(valid_dir, transform=valid_transform)
     # 先记录下来，后面再写入文件. 45.6318, 18.3280
