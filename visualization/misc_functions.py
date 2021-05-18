@@ -232,7 +232,16 @@ def get_example_params(example_index):
     # Process image
     prep_img = preprocess_image(original_image)
     # Define model
-    pretrained_model = models.alexnet(pretrained=True)
+    # pretrained_model = models.vgg16_bn(pretrained=True)
+
+    from networks import get_nets
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    pretrained_model = get_nets('resnet34', 3)
+    model_root = r'D:\workplace\project\im_environment\data'
+    model_path = model_root + r'\exp_resnet34_classify_128_Aug\best_exp_resnet34_classify_128_Aug.h5'
+    pretrained_model.load_state_dict(torch.load(model_path, map_location=device)['model'])
+
     return (original_image,
             prep_img,
             target_class,
