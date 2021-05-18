@@ -181,9 +181,10 @@ if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     set_seed(1)  # set different random seed
 
-    target_class = 2
+    target_class = 0
     pretrained_model = get_nets('resnet34', 3)
-    model_path = r'D:\workplace\project\im_environment\data\exp_resnet34_classify_128_Center\best_exp_resnet34_classify_128_Center.h5'
+    model_root = r'D:\workplace\project\im_environment\data'
+    model_path = model_root + r'\exp_resnet34_classify_128_Aug\best_exp_resnet34_classify_128_Aug.h5'
     pretrained_model.load_state_dict(torch.load(model_path, map_location=device)['model'])
     csig = RegularizedClassSpecificImageGeneration(pretrained_model, target_class)
     csig.generate(iterations=300)
