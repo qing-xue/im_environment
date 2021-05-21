@@ -5,6 +5,7 @@ data/
 *.pth
 networks/Resnet/runs/
 visualization/generated/
+visualization/results/
 runs/
 *.h5
 

@@ -221,9 +221,12 @@ def get_example_params(example_index):
         pretrained_model(Pytorch model): Model to use for the operations
     """
     # Pick one of the examples
-    example_list = (('./input_images/snake.jpg', 56),
-                    ('./input_images/cat_dog.png', 243),
-                    ('./input_images/spider.png', 72))
+    # example_list = (('./input_images/snake.jpg', 56),
+    #                 ('./input_images/cat_dog.png', 243),
+    #                 ('./input_images/spider.png', 72))
+    example_list = (('./input_images/1003PM1-(0,2560)-1-20.bmp', 0),
+                    ('./input_images/0927AM1-(0,2304)-1-57.bmp', 1),
+                    ('./input_images/1027PM1-(3072,2816)-1-78.bmp', 2))
     img_path = example_list[example_index][0]
     target_class = example_list[example_index][1]
     file_name_to_export = img_path[img_path.rfind('/')+1:img_path.rfind('.')]
@@ -231,15 +234,15 @@ def get_example_params(example_index):
     original_image = Image.open(img_path).convert('RGB')
     # Process image
     prep_img = preprocess_image(original_image)
-    # Define model
-    # pretrained_model = models.vgg16_bn(pretrained=True)
+    # Define model, alexnet
+    # pretrained_model = models.alexnet(pretrained=True)
 
     from networks import get_nets
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    pretrained_model = get_nets('resnet34', 3)
+    pretrained_model = get_nets('vgg16', 3, pretrained=False)
     model_root = r'D:\workplace\project\im_environment\data'
-    model_path = model_root + r'\exp_resnet34_classify_128_Aug\best_exp_resnet34_classify_128_Aug.h5'
+    model_path = model_root + r'\exp_vgg16_classify_128_Aug\best_exp_vgg16_classify_128_Aug.h5'
     pretrained_model.load_state_dict(torch.load(model_path, map_location=device)['model'])
 
     return (original_image,

@@ -44,14 +44,14 @@ def vgg16_customize(out, pretrained=True):
 #     return model
 
 
-def get_nets(model_name, out_features):
+def get_nets(model_name, out_features, pretrained=True):
 
     if 'resnet34' == model_name:
-        model = resnet_custom(out_features, 34)
+        model = resnet_custom(out_features, 34, pretrained)
     elif 'resnet101' == model_name:
-        model = resnet_custom(out_features, 101)
+        model = resnet_custom(out_features, 101, pretrained)
     elif 'vgg16' == model_name:
-        model = vgg16_customize(out_features)
+        model = vgg16_customize(out_features, pretrained)
 
     print(model)
     return model

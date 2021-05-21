@@ -7,7 +7,6 @@
 曝光时间、光圈、ISO感光度、焦距、测光模式这几个数据。
 
 """
-
 import exifread
 import glob
 import pandas as pd

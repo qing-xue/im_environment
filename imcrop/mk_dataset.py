@@ -176,7 +176,7 @@ def mk_dataset(Heshan_imgset, imCropper, imMapper):
 
 if __name__ == '__main__':
     # 获取表格数据和图像-表格映射对象
-    df_data = get_excel_data(r'D:\workplace\620资料\0318 组会-环境数据预处理介绍')
+    df_data = get_excel_data(r'D:\workplace\620资料\组会\21-03-18 组会-环境数据预处理介绍')
     imageMapper = ImageMapper(df_data)
 
     # 处理切块数据集

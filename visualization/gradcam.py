@@ -101,13 +101,14 @@ class GradCam():
 
 if __name__ == '__main__':
     # Get params
-    target_example = 0  # Snake
+    target_example = 0  # Snake/L0
     (original_image, prep_img, target_class, file_name_to_export, pretrained_model) =\
         get_example_params(target_example)
     # Grad cam
-    grad_cam = GradCam(pretrained_model, target_layer=11)
+    grad_cam = GradCam(pretrained_model, target_layer=42)
     # Generate cam mask
     cam = grad_cam.generate_cam(prep_img, target_class)
     # Save mask
+    original_image = original_image.resize((224, 224), Image.ANTIALIAS)  # Temporarily
     save_class_activation_images(original_image, cam, file_name_to_export)
     print('Grad cam completed')
