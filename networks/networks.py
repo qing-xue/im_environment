@@ -2,6 +2,16 @@ import torch.nn as nn
 import torchvision.models as models
 
 
+def inception_customize(out, layer=34, pretrained=True):
+    """ 自定义 ResNet 最后一层的输出数目 """
+
+    net = models.inception_v3(pretrained)
+    num_ftrs = net.fc.in_features
+    net.fc = nn.Linear(num_ftrs, out)
+
+    return net
+
+
 def resnet_custom(out, layer=34, pretrained=True):
     """ 自定义 ResNet 最后一层的输出数目 """
     if 34 == layer:
@@ -52,6 +62,8 @@ def get_nets(model_name, out_features):
         model = resnet_custom(out_features, 101)
     elif 'vgg16' == model_name:
         model = vgg16_customize(out_features)
+    elif 'inception' == model_name:
+        model = inception_customize(out_features)
 
     print(model)
     return model

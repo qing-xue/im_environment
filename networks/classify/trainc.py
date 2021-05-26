@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 import torch.optim as optim
 from torchvision.datasets import ImageFolder
 import yaml
@@ -113,7 +113,7 @@ class TrainerMul:
     
 
 if __name__ == "__main__":
-    with open('networks/config/config.yaml', 'r') as file:
+    with open('../config/config.yaml', 'r') as file:
         config_list = yaml.load(file, Loader=yaml.FullLoader)
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']

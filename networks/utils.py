@@ -5,7 +5,7 @@ import torch
 import numpy as np
 import random
 
-plt.ion()  
+plt.ion()
 
 
 def mkdir(floder):
@@ -70,8 +70,15 @@ def imshow(inp, title=None):
     plt.pause(0.001)
 
 
-def show_databatch(inputs, classes, class_names=None):
-    if not class_names:
-        class_names = classes
+def show_databatch(inputs, classes):
+    inputs = batch_inverse_normalize(inputs)
     out = torchvision.utils.make_grid(inputs)
-    imshow(out, title=[class_names[x] for x in classes])
+    imshow(out, title=classes)
+
+
+def batch_inverse_normalize(x, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    # represent mean and std to 1, C, 1, ... tensors for broadcasting
+    reshape_shape = [1, -1] + ([1] * (len(x.shape) - 2))
+    mean = torch.tensor(mean, device=x.device, dtype=x.dtype).reshape(*reshape_shape)
+    std = torch.tensor(std, device=x.device, dtype=x.dtype).reshape(*reshape_shape)
+    return x * std + mean

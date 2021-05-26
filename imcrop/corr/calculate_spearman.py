@@ -19,7 +19,7 @@ sys.path.append('../')
 matplotlib.rcParams['font.sans-serif'] = ['Source Han Sans TW', 'sans-serif']
 
 # 9月26日无上午图片，10月26日无下午图片
-dataframe = pd.read_excel(r'..\excel\temp_all.xlsx')
+dataframe = pd.read_excel(r'..\..\excel\temp_all.xlsx')
 IQA_list = ['BIQME', 'FADE', 'AG', 'IE', '清晰度']
 angle_list = ['上午1|下午1', '上午2|下午2', '上午3|下午3']
 
