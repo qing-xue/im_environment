@@ -88,26 +88,43 @@ def get_remove_file(filename):
     f.close()
     return data
 
+def remove_sky(im, filename):
+    """在切割图像之前去除天空区域
+
+    :param im: PIL.Image 原图像
+           filename: 图片名
+    :return: 返回切除天空的图像
+    """
+    # 1角度去掉原图的2/3 , 2和3角度去掉原图的2/3
+    angleDic = {1: 3/4, 2: 2/3, 3: 2/3}
+    width = im.size[0]
+    height = im.size[1]
+    angle_type = int(re.findall(r'.*(\d)\.*', filename)[0])
+    im = im.crop((0,height * angleDic[angle_type],width,height))
+    return im
+
 
 # 判断天空区域，threshold为方差阈值，r_threshold为红色通道阈值，用于筛选出非天空区域中受日落影响较大的图
 def judge_is_sky(img, threshold, r_threshold=100):
-    r,g,b = img.split()
-    r_array = np.array(r)
-    g_array = np.array(g)
-    b_array = np.array(b)
-    grey_img = img.convert('L')
-    grey_img_array = np.array(grey_img)
-    shape = grey_img_array.shape
-    mean = np.mean(grey_img_array)
-    var = np.var(grey_img_array)
-    # print(var)
-    if(var < threshold):
-        return True
-    else:
-        if(np.mean(r_array)>r_threshold):
+    try:
+        r,g,b = img.split()
+        r_array = np.array(r)
+        g_array = np.array(g)
+        b_array = np.array(b)
+        grey_img = img.convert('L')
+        grey_img_array = np.array(grey_img)
+        shape = grey_img_array.shape
+        mean = np.mean(grey_img_array)
+        var = np.var(grey_img_array)
+        # print(var)
+        if(var < threshold):
             return True
-        return False
-
+        else:
+            if(np.mean(r_array)>r_threshold):
+                return True
+            return False
+    except Exception as e:
+        return True
 
 def mk_dataset(Heshan_imgset, imCropper, imMapper):
     """ 制作数据集
@@ -138,6 +155,7 @@ def mk_dataset(Heshan_imgset, imCropper, imMapper):
         if cur_im in remove_image_list:
             continue
         im = Image.open(filename)
+        # im = remove_sky(im, filename)
         patches, boxes = imCropper.crop(im)
         
         # 拍摄时间--PM2.5值
@@ -176,12 +194,14 @@ def mk_dataset(Heshan_imgset, imCropper, imMapper):
 
 if __name__ == '__main__':
     # 获取表格数据和图像-表格映射对象
-    df_data = get_excel_data(r'D:\workplace\620资料\组会\21-03-18 组会-环境数据预处理介绍')
+    df_data = get_excel_data(r'C:\Users\kzq\Desktop\envData')
+    # kzq path C:\Users\kzq\Desktop\envData\客观图像质量指标测定-李展20210218.xlsx
     imageMapper = ImageMapper(df_data)
 
     # 处理切块数据集
-    Heshan_imgset = r'D:\workplace\dataset\Heshan_imgset\Heshan_imgset'
-    imCropper = ImageCropper(box_w=256, box_h=256, stride_w=256, stride_h=256)
+    Heshan_imgset = r'C:\Users\kzq\Desktop\envData\Heshan_imgset'
+    # kzq path C:\Users\kzq\Desktop\envData\Heshan_imgset
+    imCropper = ImageCropper(box_w=128, box_h=128, stride_w=128, stride_h=128)
     mk_dataset(Heshan_imgset, imCropper, imageMapper)
 
     # 将 Results/ 下的原始图像块归入 sky/ 和 non_sky/ 文件夹
