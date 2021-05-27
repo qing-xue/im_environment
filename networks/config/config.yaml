@@ -1,6 +1,6 @@
 ---
 project: im_invironment
-experiment_desc: 'exp_resnet34_classify_128_Aug'
+experiment_desc: 'exp_alexnet_classify_128_Aug'
 
 nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 # nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
@@ -12,7 +12,7 @@ data_split:
   split_back: False
 
 model:
-  g_name: resnet34
+  g_name: alexnet
   out_features: 3
 
 train:
