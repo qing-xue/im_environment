@@ -2,6 +2,18 @@ import torch.nn as nn
 import torchvision.models as models
 
 
+def alexnet_customize(out, pretrained=True):
+    """ 自定义 ResNet 最后一层的输出数目 """
+
+    net = models.alexnet(pretrained)
+    num_features = net.classifier[6].in_features
+    features = list(net.classifier.children())[:-1]  # Remove last layer
+    features.extend([nn.Linear(num_features, out)])
+    net.classifier = nn.Sequential(*features)
+
+    return net
+
+
 def inception_customize(out, layer=34, pretrained=True):
     """ 自定义 ResNet 最后一层的输出数目 """
 
@@ -64,6 +76,8 @@ def get_nets(model_name, out_features):
         model = vgg16_customize(out_features)
     elif 'inception' == model_name:
         model = inception_customize(out_features)
+    elif 'alexnet' == model_name:
+        model = alexnet_customize(out_features)
 
     print(model)
     return model

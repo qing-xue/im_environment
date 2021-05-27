@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 import torch
 import torch.utils.data as data
+from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 import re
 import glob
@@ -106,3 +107,19 @@ class ImgDataset(data.Dataset):
         if len(data_info) == 0:
             raise Exception("\n data_dir:{} is a empty dir! Please checkout your path to images!".format(data_dir))
         return data_info
+
+
+class MyImageFolder(ImageFolder):
+    """ 直接继承父类的变量和方法？"""
+    def __init__(self, root, transform):
+        super(MyImageFolder, self).__init__(root, transform)
+
+    def __getitem__(self, index: int):
+        path, target = self.samples[index]
+        sample = self.loader(path)
+        if self.transform is not None:
+            sample = self.transform(sample)
+
+        name = re.split(r'[\\/]', path)[-1]
+        PM25 = int(re.split('[-.]', name)[3])
+        return sample, target, (name, PM25)

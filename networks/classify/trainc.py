@@ -113,7 +113,7 @@ class TrainerMul:
     
 
 if __name__ == "__main__":
-    with open('../config/config.yaml', 'r') as file:
+    with open('networks/config/config.yaml', 'r') as file:
         config_list = yaml.load(file, Loader=yaml.FullLoader)
         data_dir = config_list['nonsky_dir']
         batch_size = config_list['batch_size']
