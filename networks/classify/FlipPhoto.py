@@ -48,7 +48,7 @@ def main_func(data_dir):
                 path_img = os.path.join(root, sub_dir, img_name)
                 grade = sub_dir
 
-                # 分类 0 只需要翻转
+                # 分类 0 只需要翻转 2倍
                 if 'L0' == grade:
                     img = cv2.imread(path_img)
                     horizontal_img = cv2.flip(img, 1)
@@ -68,8 +68,11 @@ def main_func(data_dir):
 
                     rotate_img(-1.5, img_name, path_img)
                     rotate_img(1.5, img_name, path_img)
+                    # rotate_img(2, img_name, path_img)
+
                     rotate_img(-1.5, new_img_name, path_new_img)
                     rotate_img(1.5, new_img_name, path_new_img)
+                    # rotate_img(2, new_img_name, path_new_img)
 
 
 if __name__ == '__main__':
