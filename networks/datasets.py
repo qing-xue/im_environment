@@ -123,3 +123,37 @@ class MyImageFolder(ImageFolder):
         name = re.split(r'[\\/]', path)[-1]
         PM25 = int(re.split('[-.]', name)[3])
         return sample, target, (name, PM25)
+
+
+class SegImageFolder(ImageFolder):
+    """ 直接继承父类的变量和方法？"""
+    def __init__(self, root, transform):
+        super(SegImageFolder, self).__init__(root, transform)
+
+    def __getitem__(self, index: int):
+        path, target = self.samples[index]
+        sample = self.loader(path)
+        name = re.split(r'[\\/]', path)[-1]
+        sample = self.remove_sky(sample, name)
+
+        if self.transform is not None:
+            sample = self.transform(sample)
+
+        return sample, target
+
+    @staticmethod
+    def remove_sky(im, filename):
+        """在切割图像之前去除天空区域
+
+        :param im: PIL.Image 原图像
+               filename: 图片名
+        :return: 返回切除天空的图像
+        """
+        # 1角度去掉原图的2/3 , 2和3角度去掉原图的2/3
+        angleDic = {1: 3 / 4, 2: 2 / 3, 3: 2 / 3}
+        width = im.size[0]
+        height = im.size[1]
+        angle_type = int(re.findall(r'.*(\d)\.*', filename)[0])
+        im = im.crop((0, height * angleDic[angle_type], width, height))
+        return im
+
