@@ -1,6 +1,6 @@
 ---
 project: im_invironment
-experiment_desc: 'exp_resnet34_classify_128_Aug'
+experiment_desc: 'exp_resnet34_classify_big'
 
 # nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 # nonsky_dir: F:\workplace\public_dataset\Heshan_imgset\256x256\non_sky
@@ -27,11 +27,11 @@ val:
   transform_first: CenterCrop
 
 test:
-  model_path: ../../data/exp_resnet34_classify_128_Aug/best_exp_resnet34_classify_128_Aug.h5
+  model_path: data/exp_resnet34_classify_128_Aug/best_exp_resnet34_classify_128_Aug.h5
   crop_img_blocks: 20
 
 num_epochs: 10
-batches_per_epoch: 1   # min(*, len(run_dataset))
+batches_per_epoch: 1000   # min(*, len(run_dataset))
 batch_size: 16
 image_size: [128, 128]
 

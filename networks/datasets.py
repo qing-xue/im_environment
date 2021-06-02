@@ -134,12 +134,15 @@ class SegImageFolder(ImageFolder):
         path, target = self.samples[index]
         sample = self.loader(path)
         name = re.split(r'[\\/]', path)[-1]
-        sample = self.remove_sky(sample, name)
+        img = self.remove_sky(sample, name)
+        w, h = img.size
+        if h < 128:
+            img = self.__scale_height(img, 180)  # bug
 
         if self.transform is not None:
-            sample = self.transform(sample)
+            img = self.transform(img)
 
-        return sample, target
+        return img, target
 
     @staticmethod
     def remove_sky(im, filename):
@@ -156,4 +159,22 @@ class SegImageFolder(ImageFolder):
         angle_type = int(re.findall(r'.*(\d)\.*', filename)[0])
         im = im.crop((0, height * angleDic[angle_type], width, height))
         return im
+
+    @staticmethod
+    def __scale_height(img, target_height):
+        ow, oh = img.size
+        if (oh == target_height):
+            return img
+        h = target_height
+        w = int(target_height * ow / oh)
+        return img.resize((w, h), Image.BICUBIC)
+
+    @staticmethod
+    def __scale_width(img, target_width):
+        ow, oh = img.size
+        if (ow == target_width):
+            return img
+        w = target_width
+        h = int(target_width * oh / ow)
+        return img.resize((w, h), Image.BICUBIC)
 

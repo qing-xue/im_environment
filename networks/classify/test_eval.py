@@ -93,16 +93,10 @@ class Tester:
         
 
 if __name__ == '__main__':
-    with open(r'..\config\config.yaml') as file:
+    with open(r'networks\config\config.yaml') as file:
         config_list = yaml.load(file, Loader=yaml.FullLoader)
         data_dir = config_list['nonsky_dir']
         imgsize = config_list['image_size']
-
-    # img_path = r'F:\workplace\public_dataset\Heshan_imgset\morning\1\20191116上午1.jpg'
-    # img_path = r'D:\workplace\dataset\Heshan_imgset\Heshan_imgset\am_pm_123\filtering\test\L0\14.2-20191007上午2.jpg'
-    # input_ = Image.open(img_path)
-    # tester = Tester(config_list, input_)
-    # tester.test()
 
     test_dir = os.path.join(data_dir, "test")
     norm_mean = [0.485, 0.456, 0.406]

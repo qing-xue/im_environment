@@ -1,11 +1,12 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from torch.utils.data import Subset
 import torch.optim as optim
-from torchvision.datasets import ImageFolder
 import yaml
 import tqdm
 import logging
+import numpy as np
 
 import os, sys
 curPath = os.path.abspath(os.path.dirname(__file__))
@@ -14,7 +15,7 @@ sys.path.append(rootPath)
 print(sys.path)  # 必要时检查，有时要进入脚本所在目录运行
 
 from utils import set_seed, value2class, inverse_PM, dataset_class_count
-from datasets import ImagePMSet, get_transform
+from datasets import SegImageFolder, get_transform
 from networks import get_nets
 from metric_counter import MetricCounter
 
@@ -119,23 +120,21 @@ if __name__ == "__main__":
         batch_size = config_list['batch_size']
         imgsize = config_list['image_size']
         train_trans_first = config_list['train']['transform_first']
-        val_trans_first = config_list['val']['transform_first']
 
     train_dir = os.path.join(data_dir, "train")
-    valid_dir = os.path.join(data_dir, "val")
     train_transform = get_transform(imgsize, train_trans_first)
-    valid_transform = get_transform(imgsize, val_trans_first)  # 验证集不一定跟训练集的transform一致
-    train_dataset = ImageFolder(train_dir, transform=train_transform)
-    valid_dataset = ImageFolder(valid_dir, transform=valid_transform)
+    full_dataset = SegImageFolder(train_dir, transform=train_transform)
+    dataset_class_count(full_dataset)
 
-    # 输出不同类别下样本数目、比例
-    dataset_class_count(train_dataset)
-    dataset_class_count(valid_dataset)
+    # Split the indices in a stratified way
+    train_size = int(0.85 * len(full_dataset))
+    val_size = len(full_dataset) - train_size
+    train_dataset, val_dataset = torch.utils.data.random_split(full_dataset, [train_size, val_size])
 
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
-    valid_loader = DataLoader(dataset=valid_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True)
 
-    trainer = TrainerMul(config_list, train=train_loader, val=valid_loader)
+    trainer = TrainerMul(config_list, train=train_loader, val=val_loader)
     trainer.train()
 
 
