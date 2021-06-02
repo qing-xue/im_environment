@@ -9,8 +9,8 @@ nonsky_dir: D:\workplace\dataset\Heshan_imgset\Heshan_imgset\am_pm_123\filtering
 
 data_split:
   split_date: 1107  # need to delete
-  val_ratio: 0.15   # train: 0.7
-  test_ratio: 0.15
+  val_ratio: 0.0   # train: 0.7
+  test_ratio: 0.2
   split_back: False
 
 model:

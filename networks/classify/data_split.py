@@ -9,7 +9,7 @@ import yaml
 import glob
 import random
 
-random.seed(8)
+random.seed(88)
 
 # 仅使用取整后的 PM2.5 值
 with open('networks/config/config.yaml') as file:
