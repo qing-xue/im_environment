@@ -1,11 +1,12 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision.datasets import ImageFolder
+from torch.utils.data import Subset
 import torch.optim as optim
 import yaml
 import tqdm
 import logging
+import numpy as np
 
 import os, sys
 curPath = os.path.abspath(os.path.dirname(__file__))
@@ -14,7 +15,7 @@ sys.path.append(rootPath)
 print(sys.path)  # 必要时检查，有时要进入脚本所在目录运行
 
 from utils import set_seed, value2class, inverse_PM, dataset_class_count
-from datasets import get_transform
+from datasets import SegImageFolder, get_transform
 from networks import get_nets
 from metric_counter import MetricCounter
 
@@ -36,7 +37,6 @@ class TrainerMul:
         if self.pretrained:
             self.start_epoch = self.config['train']['start_epoch']
             self.model.load_state_dict(torch.load(self.config['train']['model_path'], map_location=device)['model'])
-
         self.model.to(device)
         for epoch in range(self.start_epoch, self.start_epoch + self.config['num_epochs']):
             self._run_epoch(epoch)
@@ -121,9 +121,9 @@ if __name__ == "__main__":
         imgsize = config_list['image_size']
         train_trans_first = config_list['train']['transform_first']
 
-    train_dir = os.path.join(data_dir)  # 直接 data_dir 下有 L0/L1/L2
+    train_dir = os.path.join(data_dir, "train")
     train_transform = get_transform(imgsize, train_trans_first)
-    full_dataset = ImageFolder(train_dir, transform=train_transform)
+    full_dataset = SegImageFolder(train_dir, transform=train_transform)
     dataset_class_count(full_dataset)
 
     # Split the indices in a stratified way
