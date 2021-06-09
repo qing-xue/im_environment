@@ -28,7 +28,7 @@ val:
 
 test:
   model_path: data/exp_resnet34_classify_128_Aug/best_exp_resnet34_classify_128_Aug.h5
-  crop_img_blocks: 20
+  crop_img_blocks: 50
 
 num_epochs: 10
 batches_per_epoch: 1000   # min(*, len(run_dataset))

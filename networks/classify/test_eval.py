@@ -2,10 +2,8 @@ import time
 import torch
 import torch.nn as nn
 import yaml
-from PIL import Image
 import numpy as np
 from scipy import stats
-from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
@@ -31,8 +29,8 @@ class Tester:
         self._init_params()
         self.model.to(device)
         self.model.train(False)
-        # self._test_single_img(self.img)
         correct_all, cnt_all = 0, 0
+        time_start = time.time()
         for i, data in enumerate(self.dataLoader):
             inputs, labels = data
 
@@ -59,30 +57,10 @@ class Tester:
             correct_all += correct
             cnt_all += labels.size(0)
 
+        time_end = time.time()
+        print('time cost', (time_end - time_start) / len(test_dataset), 's')  # 这里默认 batch=1
         acc = correct_all * 1. / cnt_all
         print('Acc: ', acc)
-
-
-    def _test_single_img(self, input_):
-        time_start = time.time()
-        Xs = self.transform(input_)
-        Xs = Xs.unsqueeze(0)
-        for i in range(1, self.crop_img_blocks):
-            X = self.transform(input_)
-            Xs = torch.cat((Xs, X.unsqueeze(0)), 0)
-
-        with torch.no_grad():
-            Xs = Xs.to(device)
-            outputs = self.model(Xs)  # 可处理多个
-            _, preds = torch.max(outputs.data, 1)
-
-        class_list = preds.cpu().data.numpy()
-        print('Median class: {}'.format(np.median(class_list)))
-        class_mode = stats.mode(class_list)
-        print('Mode class: {}, count: {}/{}'.format(class_mode[0][0], class_mode[1][0], self.crop_img_blocks))
-
-        time_end = time.time()
-        print('Single image time cost {:.2f} s'.format(time_end - time_start))
 
     def _init_params(self):
         self.criterion = nn.MSELoss()  # get_loss 抽象

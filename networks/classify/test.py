@@ -31,27 +31,7 @@ class Tester:
         self._init_params()
         self.model.to(device)
         self.model.train(False)
-        # self._test_single_img(self.img)
-        for i, data in enumerate(self.dataLoader):
-            inputs, labels = data
-
-            for j, input_ in enumerate(inputs):
-                Xs = self.transform(input_)
-                Xs = Xs.unsqueeze(0)
-
-                for i in range(1, self.crop_img_blocks):
-                    X = self.transform(input_)
-                    Xs = torch.cat((Xs, X.unsqueeze(0)), 0)
-
-                with torch.no_grad():
-                    Xs = Xs.to(device)
-                    outputs = self.model(Xs)  # 可处理多个
-                    _, preds = torch.max(outputs.data, 1)
-
-                class_list = preds.cpu().data.numpy()
-                print('Median class: {}'.format(np.median(class_list)))
-                class_mode = stats.mode(class_list)
-                print('Mode class: {}, count: {}/{}'.format(class_mode[0][0], class_mode[1][0], self.crop_img_blocks))
+        self._test_single_img(self.img)
 
     def _test_single_img(self, input_):
         time_start = time.time()
@@ -88,21 +68,9 @@ if __name__ == '__main__':
         data_dir = config_list['nonsky_dir']
         imgsize = config_list['image_size']
 
-    # img_path = r'F:\workplace\public_dataset\Heshan_imgset\morning\1\20191116上午1.jpg'
-    # img_path = r'D:\workplace\dataset\Heshan_imgset\Heshan_imgset\am_pm_123\filtering\test\L0\14.2-20191007上午2.jpg'
-    # input_ = Image.open(img_path)
-    # tester = Tester(config_list, input_)
-    # tester.test()
-
-    test_dir = os.path.join(data_dir, "test")
-    norm_mean = [0.485, 0.456, 0.406]
-    norm_std = [0.229, 0.224, 0.225]
-    test_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(norm_mean, norm_std),
-    ])
-    test_dataset = ImageFolder(test_dir, transform=test_transform)
-    test_loader = DataLoader(dataset=test_dataset, batch_size=1, shuffle=False)
-
-    tester = Tester(config_list, dataLoader=test_loader)
+    img_path = r'F:\workplace\public_dataset\Heshan_imgset\morning\1\20191116上午1.jpg'
+    img_path = r'D:\workplace\dataset\Heshan_imgset\Heshan_imgset\am_pm_123\filtering\test\L0\14.2-20191007上午2.jpg'
+    input_ = Image.open(img_path)
+    tester = Tester(config_list, input_)
     tester.test()
+
