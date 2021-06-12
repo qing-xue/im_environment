@@ -32,15 +32,16 @@ class Tester:
         correct_all, cnt_all = 0, 0
         time_start = time.time()
         for i, data in enumerate(self.dataLoader):
-            inputs, labels = data
+            inputs, labels, names = data
 
-            vote_pred = [-1 for i in range(len(inputs))]  # 记录投票预测值
+            vote_pred = [0 for x in range(len(inputs))]  # 记录每张大图的投票预测值
             for j, input_ in enumerate(inputs):
-                Xs = self.transform(input_)
+                Xs = self.randomCrop(input_)
                 Xs = Xs.unsqueeze(0)
 
+                # 上面两句代码随机抽取一个块，下面再抽取剩下的
                 for i in range(1, self.crop_img_blocks):
-                    X = self.transform(input_)
+                    X = self.randomCrop(input_)
                     Xs = torch.cat((Xs, X.unsqueeze(0)), 0)
 
                 with torch.no_grad():
@@ -49,8 +50,9 @@ class Tester:
                     _, preds = torch.max(outputs.data, 1)
 
                 class_list = preds.cpu().data.numpy()
-                class_mode = stats.mode(class_list)
+                class_mode = stats.mode(class_list)  # 记录投票的众数
                 print('Mode class: {}, count: {}/{}'.format(class_mode[0][0], class_mode[1][0], self.crop_img_blocks))
+                print('True label & name: ', names[j])
                 vote_pred[j] = class_mode[0][0]
 
             correct = np.sum(np.array(vote_pred) == labels.cpu().data.numpy())
@@ -66,7 +68,7 @@ class Tester:
         self.criterion = nn.MSELoss()  # get_loss 抽象
         self.model = get_nets(self.config['model']['g_name'], self.config['model']['out_features'])
         self.model.load_state_dict(torch.load(self.config['test']['model_path'], map_location=device)['model'])
-        self.transform = transforms.RandomCrop(self.config['image_size'])
+        self.randomCrop = transforms.RandomCrop(self.config['image_size'])
         self.crop_img_blocks = self.config['test']['crop_img_blocks']
         
 

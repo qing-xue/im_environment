@@ -139,10 +139,11 @@ class SegImageFolder(ImageFolder):
         if h < 128:
             img = self.__scale_height(img, 180)  # bug
 
+        # 上面先去除天空区域，再做归一化等操作
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, target
+        return img, target, name
 
     @staticmethod
     def remove_sky(im, filename):
