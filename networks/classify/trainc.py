@@ -121,7 +121,7 @@ if __name__ == "__main__":
         imgsize = config_list['image_size']
         train_trans_first = config_list['train']['transform_first']
 
-    train_dir = os.path.join(data_dir)  # 直接 data_dir 下有 L0/L1/L2
+    train_dir = os.path.join(data_dir, 'train_blocks')
     train_transform = get_transform(imgsize, train_trans_first)
     full_dataset = ImageFolder(train_dir, transform=train_transform)
     dataset_class_count(full_dataset)

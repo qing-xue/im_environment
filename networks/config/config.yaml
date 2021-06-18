@@ -2,10 +2,10 @@
 project: im_invironment
 experiment_desc: 'exp_resnet34_classify_128'
 
-# Train: data_dir has L0/L1/L2; Test: pass 'test/'s parent dir.
+# Train: train_blocks has L0/L1/L2; Test: test has L0/L1/L2.
 # nonsky_dir: D:\workplace\dataset\Heshan_imgset\256x256\non_sky
 nonsky_dir: D:\workplace\dataset\Heshan_imgset\Heshan_imgset\am_pm_123\filtering
-# nonsky_dir: ../Heshan_imgset/256x256/non_sky
+# nonsky_dir: ../Heshan_imgset/big_imgs
 
 data_split:
   split_date: 1107  # need to delete
@@ -14,7 +14,7 @@ data_split:
   split_back: False
 
 model:
-  g_name: resnet34
+  g_name: alexnet
   out_features: 3
 
 train:
@@ -27,8 +27,8 @@ val:
   transform_first: CenterCrop  # When use Subset, val's transform is the same as train's
 
 test:
-  # model_path: data/exp_resnet34_classify_128/best_exp_resnet34_classify_128.h5
-  model_path: data/all_blocks/exp_resnet34_classify_128_Aug/best_exp_resnet34_classify_128_Aug.h5
+  model_path: data/exp_alexnet_classify_128/best_exp_alexnet_classify_128.h5
+  # model_path: data/all_blocks/exp_resnet34_classify_128_Aug/best_exp_resnet34_classify_128_Aug.h5
   crop_img_blocks: 40
 
 num_epochs: 100

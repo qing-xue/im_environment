@@ -78,7 +78,7 @@ if __name__ == '__main__':
         data_dir = config_list['nonsky_dir']
         imgsize = config_list['image_size']
 
-    test_dir = os.path.join(data_dir, "test")
+    test_dir = os.path.join(data_dir, 'test')
     norm_mean = [0.485, 0.456, 0.406]
     norm_std = [0.229, 0.224, 0.225]
     test_transform = transforms.Compose([
